@@ -1,11 +1,29 @@
-#include "../inc/client.hpp"
-#include "../inc/server.hpp"
 #include "../inc/main.hpp"
+
+ssize_t send_all(int socket, const void *buffer, size_t length, int flags)
+{
+    ssize_t totalSentBytes = 0;
+    const char *bufferPtr = (const char*) buffer;
+
+    while (totalSentBytes < static_cast<ssize_t>(length))
+    {
+        ssize_t sentBytes = send(socket, bufferPtr + totalSentBytes, length - totalSentBytes, flags);
+        if (sentBytes == -1)
+        {
+            return -1; // Return -1 on failure, caller will check errno
+        }
+
+        totalSentBytes += sentBytes;
+    }
+
+    return totalSentBytes;
+}
 
 void     get_new_user(server &server, std::vector<user> &users, std::vector<pollfd> &fds)
 {
     int newClientSocket = accept(server.socket_id, NULL, NULL);
-    if (newClientSocket == -1) {
+    if (newClientSocket == -1)
+    {
         std::cerr << "Can't accept client!";
         return;
     }
@@ -16,6 +34,29 @@ void     get_new_user(server &server, std::vector<user> &users, std::vector<poll
     newPfd.events = POLLIN;
     fds.push_back(newPfd);
     fds[0].revents = 0;
+    send_all(newPfd.fd, "Welcome to the server!\n", 23, 0);
+    send_all(newPfd.fd, "Please enter your nickname and your user: \n", 44, 0);
+    send_all(newPfd.fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
+}
+
+void    check_login(char *buf, user &user, int fd)
+{
+    std::string buffer(buf);
+    std::cout << user.getSocket() << std::endl;
+    send_all(fd, "Please enter your nickname and your user: \n", 44, 0);
+    send_all(fd, "NICK <nickname>\nUSER <username>\n", 34, 0);
+    if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
+    {
+        std::string nick = buffer.substr(buffer.find("NICK") + 5);
+        nick = nick.substr(0, nick.find("\n"));
+        user.setNickname(nick);
+        std::cout << "Nickname set to: " << nick << std::endl;
+    }
+    if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n'))
+    {
+        user.setUsername(buffer.substr(buffer.find("USER") + 5, buffer.find(" ", buffer.find("USER") + 5) - buffer.find("USER") - 5));
+        std::cout << "Username set to: " << user.getUsername() << std::endl;
+    }
 }
 
 int main(int argc, char **argv)
@@ -37,26 +78,31 @@ int main(int argc, char **argv)
     {
         int ret = poll(fds.data(), fds.size(), -1); // Wait indefinitely for events
 
-        if (ret == -1) {
+        if (ret == -1)
+        {
             std::cerr << "Error in poll(). Quitting" << std::endl;
             break;
         }
 
-        if (fds[0].revents & POLLIN) {
+        if (fds[0].revents & POLLIN)
             get_new_user(server, users, fds);
-        }
 
-        for (size_t i = 0; i < fds.size(); ++i) {
-            if (fds[i].revents & POLLIN) {
+        for (size_t i = 0; i < fds.size(); ++i)
+        {
+            if (fds[i].revents & POLLIN)
+            {
                 std::memset(buffer, 0, BUFFER_SIZE);
+
                 int bytesRead = recv(fds[i].fd, buffer, BUFFER_SIZE, 0);
+
                 if (bytesRead == -1)
                 {
                     std::cerr << "Error in recv(). Quitting" << std::endl;
                     break;
                 }
 
-                if (bytesRead == 0) {
+                if (bytesRead == 0)
+                {
                     std::cout << "Client disconnected" << std::endl;
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);
@@ -64,9 +110,12 @@ int main(int argc, char **argv)
                     break;
                 }
 
-                std::cout << "Received from client " << i << ": " << std::string(buffer, 0, bytesRead);
-                // Echo message back to client
-                send(fds[i].fd, buffer, bytesRead, 0);
+                if (users[i].getNickname().empty() || users[i].getUsername().empty())
+                    check_login(buffer, users[i], fds[i].fd);
+                else
+                    std::cout << "Received from client " << i << ": " << std::string(buffer, 0, bytesRead);
+//                // Echo message back to client
+//                send(fds[i].fd, buffer, bytesRead, 0);
             }
         }
     }

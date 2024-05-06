@@ -5,18 +5,9 @@
 #ifndef FT_IRC_GIT_SERVER_HPP
 #define FT_IRC_GIT_SERVER_HPP
 
-#include <string>
-#include <iostream>
-#include <string>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <cstdlib>
-#include <fcntl.h>
+#include "main.hpp"
+#include "client.hpp"
+
 #define PORT 54000 // to be changed to receive as argument
 #define BUFFER_SIZE 4096
 
@@ -38,6 +29,7 @@ private:
     sockaddr_in client;
     socklen_t clientSize;
     const char *server_ip;
+    std::map <std::string, int> channels;
 };
 
 
