@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="885635c2-2a38-4485-87a3-1ee27d0e0b1f" name="Changes" comment="Server loops and accepts users that dont exist. Worst than it was before.">
+      <change beforePath="$PROJECT_DIR$/inc/client.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/inc/client.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/main.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/inc/main.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/server.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/inc/server.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/srcs/client.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/srcs/client.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/srcs/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/srcs/main.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2fxIiS9saJW62ApyVOJI17Gdeu6" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/ldiogo/Desktop/42-ft_irc",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/srcs" />
+      <recent name="$PROJECT_DIR$/inc" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="885635c2-2a38-4485-87a3-1ee27d0e0b1f" name="Changes" comment="" />
+      <created>1714736428710</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1714736428710</updated>
+      <workItem from="1714736429734" duration="8972000" />
+      <workItem from="1714748896065" duration="2972000" />
+      <workItem from="1715001223576" duration="1584000" />
+      <workItem from="1715003285305" duration="19000" />
+      <workItem from="1715003308955" duration="6434000" />
+    </task>
+    <task id="LOCAL-00001" summary="Server loops and accepts users that dont exist. Worst than it was before.">
+      <option name="closed" value="true" />
+      <created>1714751851237</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1714751851237</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Server loops and accepts users that dont exist. Worst than it was before." />
+    <option name="LAST_COMMIT_MESSAGE" value="Server loops and accepts users that dont exist. Worst than it was before." />
+  </component>
+</project>
