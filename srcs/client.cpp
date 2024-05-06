@@ -13,10 +13,10 @@ user::user(int newSocket)
         std::cerr << "Can't accept client!";
         exit(EXIT_FAILURE);
     }
-    std::cout << "Client connected 1" << std::endl;
+    status = 0;
+    std::cout << "New client connected" << std::endl;
 }
 
 user::~user()
 {
-    close(clientSocket);
 }
