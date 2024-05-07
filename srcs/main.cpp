@@ -35,7 +35,7 @@ void     get_new_user(server &server, std::vector<user> &users, std::vector<poll
     fds.push_back(newPfd);
     fds[0].revents = 0;
     send_all(newPfd.fd, "Welcome to the server!\n", 23, 0);
-    send_all(newPfd.fd, "Please enter your nickname and your user: \n", 44, 0);
+    send_all(newPfd.fd, "Please enter your nickname and your user: \n", 43, 0);
     send_all(newPfd.fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
 }
 
@@ -43,8 +43,6 @@ void    check_login(char *buf, user &user, int fd)
 {
     std::string buffer(buf);
     std::cout << user.getSocket() << std::endl;
-    send_all(fd, "Please enter your nickname and your user: \n", 44, 0);
-    send_all(fd, "NICK <nickname>\nUSER <username>\n", 34, 0);
     if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
     {
         std::string nick = buffer.substr(buffer.find("NICK") + 5);
@@ -57,6 +55,16 @@ void    check_login(char *buf, user &user, int fd)
         user.setUsername(buffer.substr(buffer.find("USER") + 5, buffer.find(" ", buffer.find("USER") + 5) - buffer.find("USER") - 5));
         std::cout << "Username set to: " << user.getUsername() << std::endl;
     }
+
+	if (user.getNickname().empty() && user.getUsername().empty())
+	{
+		send_all(fd, "Please enter your nickname and your user: \n", 43, 0);
+		send_all(fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
+	}
+	else if (user.getNickname().empty())
+		send_all(fd, "Please enter your nickname: \nNICK <nickname>\n", 46, 0);
+	else if (user.getUsername().empty())
+		send_all(fd, "Please enter your username: \nUSER <username>\n", 46, 0);
 }
 
 int main(int argc, char **argv)
