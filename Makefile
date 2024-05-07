@@ -1,4 +1,4 @@
-SRCS	=	main.cpp client.cpp server.cpp \
+SRCS	=	main.cpp client.cpp server.cpp channel.cpp\
 
 OBJS	=	$(addprefix objs/,$(SRCS:.cpp=.o))
 

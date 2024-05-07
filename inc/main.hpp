@@ -2,8 +2,7 @@
 // Created by ldiogo on 03-05-2024.
 //
 
-#ifndef FT_IRC_GIT_MAIN_HPP
-#define FT_IRC_GIT_MAIN_HPP
+#pragma once
 
 #include <vector>
 #include <poll.h>
@@ -20,10 +19,9 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <map>
-#include "server.hpp"
 #include "client.hpp"
+#include "channel.hpp"
+#include "server.hpp"
 
 class user;
 void    check_login(char *buf, user &user, int fd);
-
-#endif //FT_IRC_GIT_MAIN_HPP

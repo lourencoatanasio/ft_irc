@@ -67,6 +67,23 @@ void    check_login(char *buf, user &user, int fd)
 		send_all(fd, "Please enter your username: \nUSER <username>\n", 46, 0);
 }
 
+void check_channel(char *buf, user &user, int fd, server &server)
+{
+    std::string buffer(buf);
+    std::cout << buffer << std::endl;
+    if (buffer.find("JOIN") != std::string::npos && (buffer.find("JOIN") == 0 || buffer[buffer.find("JOIN") - 1] == '\n')) {
+        std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
+        channelName = channelName.substr(0, channelName.find("\n"));
+        if (server.channels.find(channelName) == server.channels.end())
+            server.channels[channelName] = new channel();
+        else
+            server.channels[channelName]->add_user(user);
+        std::string message = ":" + user.getNickname() + "!" + user.getUsername() + " JOIN " + channelName + "\r\n";
+        send(fd, message.c_str(), message.size(), 0);
+        std::cout << "Channel set to: " << channelName << std::endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
@@ -124,6 +141,7 @@ int main(int argc, char **argv)
                     std::cout << "Received from client " << i << ": " << std::string(buffer, 0, bytesRead);
 //                // Echo message back to client
 //                send(fds[i].fd, buffer, bytesRead, 0);
+                check_channel(buffer, users[i], fds[i].fd, server);
             }
         }
     }
