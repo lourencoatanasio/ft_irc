@@ -14,5 +14,5 @@ channel::~channel()
 
 void channel::add_user(user user)
 {
-    users.push_back(user);
+    this->users.push_back(user);
 }

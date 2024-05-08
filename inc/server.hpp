@@ -12,6 +12,7 @@
 #define BUFFER_SIZE 4096
 
 class channel;
+class user;
 
 class server
 {
@@ -24,6 +25,7 @@ class server
         void disconnect(); // Not sure if this is needed
         int socket_id;
         std::map<std::string, channel*> channels;
+        std::map<int, user> users;
     private:
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
