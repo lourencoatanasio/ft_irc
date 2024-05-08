@@ -1,6 +1,6 @@
 GREEN		=	\033[0;32m
 RED			=	\033[0;31m
-YELLOW	=	\033[0;33m
+YELLOW		=	\033[0;33m
 END			=	\033[0m
 
 NAME		=	ft_irc
@@ -20,7 +20,7 @@ all:			$(NAME)
 					@clear
 
 $(OBJ_DIR)/%.o:	src/%.cpp | $(OBJ_DIR)
-								@$(CC) $(CFLAGS) -c $< -o $@
+					@$(CC) $(CFLAGS) -c $< -o $@
 
 $(NAME):	$(OBJS)
 					@clear
