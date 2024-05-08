@@ -6,6 +6,7 @@
 
 user::user(int newSocket)
 {
+	isOp = false;
     clientSize = sizeof(client);
     clientSocket = newSocket;
     if (clientSocket == -1 )
@@ -19,4 +20,16 @@ user::user(int newSocket)
 
 user::~user()
 {
+}
+
+void	user::check_operator(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	if (buffer.find("MODE") != std::string::npos && (buffer.find("MODE") == 0))
+	{
+		std::cout << YELLOW << buffer << "\n" << NC;
+		;
+	}
+	(void)server;
+	(void)fd;
 }

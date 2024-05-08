@@ -8,6 +8,7 @@
 #include "client.hpp"
 
 class user;
+class Operator;
 
 class channel {
     public:
@@ -18,7 +19,10 @@ class channel {
         void receive(); // Not sure if this is needed
         void disconnect(); // Not sure if this is needed
         void add_user(user user);
+		void	add_operator(user user, std::string channelName);
 
         std::vector<user> users;
+		std::vector<Operator> ops;
     private:
+		int	nUsers;
 };

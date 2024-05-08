@@ -23,5 +23,11 @@
 #include "channel.hpp"
 #include "server.hpp"
 
+#define NC "\033[0m"
+#define RED "\033[0;31m"
+#define GREEN "\033[0;32m"
+#define YELLOW "\033[0;33m"
+#define MAGENTA "\033[0;35m"
+
 class user;
 void    check_login(char *buf, user &user, int fd);

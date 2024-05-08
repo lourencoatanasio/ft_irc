@@ -102,6 +102,7 @@ void check_channel(char *buf, int fd, server *server)
         if (server->channels.find(channelName) == server->channels.end()) {
             server->channels[channelName] = new channel();
             server->channels[channelName]->add_user(server->users[fd]);
+			server->channels[channelName]->add_operator(server->users[fd], channelName);
         }
         else
             server->channels[channelName]->add_user(server->users[fd]);
@@ -196,6 +197,7 @@ int main(int argc, char **argv)
                 check_login(buffer, fds[i].fd, server);
                 check_channel(buffer, fds[i].fd, server);
                 check_priv(buffer, fds[i].fd, server);
+				server->users[i].check_operator(buffer, fds[i].fd, server);
             }
         }
     }

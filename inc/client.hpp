@@ -7,6 +7,7 @@
 #include "server.hpp"
 
 #define BUFFER_SIZE 4096
+class server;
 
 class user
 {
@@ -21,10 +22,12 @@ class user
         int clientSocket;
         std::string getNickname() { return nickname; }
         std::string getUsername() { return username; }
+        int getOpStatus() { return isOp; }
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
         void setUsername(std::string newUsername) { username = newUsername; }
-    private:
+		void	check_operator(char *buf, int fd, server *server);
+    protected:
         int status;
         int socket_id;
         sockaddr_in IP;
@@ -35,4 +38,5 @@ class user
         std::string nickname;
         std::string username;
         int fd;
+		int	isOp;
 };
