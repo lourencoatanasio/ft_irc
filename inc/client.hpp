@@ -12,6 +12,7 @@ class user
 {
     public:
         user(int newSocket);
+        user() : clientSocket(-1) {}
         ~user();
         void connect(); // Not sure if this is needed
         void send(); // Not sure if this is needed
@@ -33,4 +34,5 @@ class user
         socklen_t clientSize;
         std::string nickname;
         std::string username;
+        int fd;
 };
