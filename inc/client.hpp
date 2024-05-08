@@ -24,6 +24,8 @@ class user
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
         void setUsername(std::string newUsername) { username = newUsername; }
+        void setStatus(int newStatus) { status = newStatus; }
+        int getStatus() { return status; }
     private:
         int status;
         int socket_id;
