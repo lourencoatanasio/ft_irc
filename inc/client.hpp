@@ -8,6 +8,8 @@
 
 #define BUFFER_SIZE 4096
 
+//status = 0
+
 class user
 {
     public:

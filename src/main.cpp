@@ -35,7 +35,7 @@ void     get_new_user(server *server, std::vector<pollfd> &fds)
     fds.push_back(newPfd);
     fds[0].revents = 0;
     send_all(newPfd.fd, "Welcome to the server!\n", 23, 0);
-    send_all(newPfd.fd, "Please enter your username: \n", 30, 0);
+    send_all(newPfd.fd, "Please enter the server password: PASS <password>\n", 51, 0);
 }
 
 void	login_user(std::string buffer, int fd, server *server)
@@ -163,14 +163,14 @@ void    get_username(char *buf, int fd, server *server)
                 username = username.substr(0, endPos);
             server->users[fd].setUsername(username);
             std::cout << "Username set to: " << username << std::endl;
-            server->users[fd].setStatus(1);
+            server->users[fd].setStatus(2);
             std::cout << "status = " << server->users[fd].getStatus() << "\n";
         }
         else
             send_all(fd, "You may not reregister\n", 23, 0);
     }
     else if(server->users[fd].getUsername().empty())
-        send_all(fd, "Please enter your username: \n", 30, 0);
+        send_all(fd, "Please enter your username: USER <username>\n", 45, 0);
 }
 
 void    get_nickname(char *buf, int fd, server *server)
@@ -195,18 +195,50 @@ void    get_nickname(char *buf, int fd, server *server)
             server->users[fd].setNickname(nick);
         std::cout << "status = " << server->users[fd].getStatus() << "\n";
         std::cout << "Nickname set to: " << nick << std::endl;
-        server->users[fd].setStatus(2);
+        server->users[fd].setStatus(3);
         std::cout << "status = " << server->users[fd].getStatus() << "\n";
     }
     else if(server->users[fd].getNickname().empty())
-        send_all(fd, "Please enter your nickname: \n", 30, 0);
+        send_all(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
+}
+
+void    get_password(char *buf, int fd, server *server)
+{
+    std::string buffer(buf);
+    if (buffer.find("PASS") != std::string::npos && (buffer.find("PASS") == 0 || buffer[buffer.find("PASS") - 1] == '\n'))
+    {
+        std::string pass = buffer.substr(buffer.find("PASS") + 5,
+                                             buffer.find(" ", buffer.find("PASS") + 5) - buffer.find("PASS") - 5);
+        std::size_t endPos = pass.find_first_of("\r\n");
+        if (endPos != std::string::npos)
+            pass = pass.substr(0, endPos);
+        if (pass != server->getPass())
+        {
+            std::cout << server->getPass() << std::endl;
+            std::cout << pass << std::endl;
+            send_all(fd, "You've entered the wrong password, please try again\n", 53, 0);
+            return ;
+        }
+        else
+        {
+            send_all(fd, "Correct password.\n\nGood chatting!\n\n", 39, 0);
+            server->users[fd].setStatus(1);
+            return ;
+        }
+    }
+    else if(server->users[fd].getStatus() == 0)
+        send_all(fd, "Please enter the server password: PASS <password>\n", 51, 0);
 }
 
 int main(int argc, char **argv)
 {
-    (void)argc;
     (void)argv;
-    server serverT; // Create a server object
+    if(argc != 3)
+    {
+        std::cout << "Proper use is <./ft_irc <port> <password>\n";
+        return (0);
+    }
+    server serverT(argv[2]); // Create a server object
     server *server = &serverT; // Create a pointer to the server object
 
     std::vector<pollfd> fds;
@@ -259,10 +291,11 @@ int main(int argc, char **argv)
 
                 std::cout << "status = " << server->users[fds[i].fd].getStatus() << "\n";
 
-                if()
                 if (server->users[fds[i].fd].getStatus() == 0)
-                    get_username(buffer, fds[i].fd, server);
+                    get_password(buffer, fds[i].fd, server);
                 if (server->users[fds[i].fd].getStatus() == 1)
+                    get_username(buffer, fds[i].fd, server);
+                if (server->users[fds[i].fd].getStatus() == 2)
                     get_nickname(buffer, fds[i].fd, server);
 //                check_login(buffer, fds[i].fd, server);
 //                check_channel(buffer, fds[i].fd, server);
