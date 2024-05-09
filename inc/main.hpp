@@ -31,3 +31,4 @@
 
 class user;
 void    check_login(char *buf, user &user, int fd);
+ssize_t send_all(int socket, const void *buffer, size_t length, int flags);

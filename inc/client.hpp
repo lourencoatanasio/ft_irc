@@ -38,5 +38,5 @@ class user
         std::string nickname;
         std::string username;
         int fd;
-		int	isOp;
+		bool	isOp;
 };

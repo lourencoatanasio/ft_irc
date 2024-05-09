@@ -1,9 +1,11 @@
 
 #include "../inc/operator.hpp"
 
-Operator::Operator(user &user) : user_(user)
+Operator::Operator(user &user)
 {
-	(void)user_;
+	this->isOp = true;
+	this->username = user.getUsername();
+	this->nickname = user.getNickname();
 }
 
 Operator::~Operator()

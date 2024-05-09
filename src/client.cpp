@@ -25,10 +25,33 @@ user::~user()
 void	user::check_operator(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-	if (buffer.find("MODE") != std::string::npos && (buffer.find("MODE") == 0))
+	std::istringstream iss(buffer);
+	std::string	command, channel, flag, nameOp;
+	iss >> command >> channel >> flag >> nameOp;
+
+	if (command.compare("MODE") == 0 && (flag.compare("+o") == 0 || flag.compare("-o") == 0))
 	{
-		std::cout << YELLOW << buffer << "\n" << NC;
-		;
+		std::size_t endPos = nameOp.find_first_of("\t\n\r ");
+		if (endPos != std::string::npos)
+			nameOp = nameOp.substr(0, endPos);
+		
+		if (server->channels.find(channel) != server->channels.end())
+		{
+			for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++)
+			{
+				std::string u = server->channels[channel]->users[i].getUsername();
+				std::string n = server->channels[channel]->users[i].getNickname();
+				
+				if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0)
+				{
+					std::cout << YELLOW << server->channels[channel]->users.size() << NC << "\n";
+					std::cout << YELLOW << server->users[fd].getUsername() << NC << "\n";
+					std::cout << YELLOW << server->users[i].getUsername() << NC << "\n";
+					server->channels[channel]->add_operator(server->users[fd], channel);
+					send_all(fd, "TEST\r\n", 8, 0);
+				}
+			}
+		}
 	}
 	(void)server;
 	(void)fd;

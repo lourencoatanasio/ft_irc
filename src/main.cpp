@@ -99,6 +99,7 @@ void check_channel(char *buf, int fd, server *server)
         std::size_t endPos = channelName.find_first_of("\t\n\r ");
         if (endPos != std::string::npos)
             channelName = channelName.substr(0, endPos);
+		std::cout << RED << "channel name: " << channelName << NC << "\n";
         if (server->channels.find(channelName) == server->channels.end()) {
             server->channels[channelName] = new channel();
             server->channels[channelName]->add_user(server->users[fd]);
@@ -189,6 +190,16 @@ int main(int argc, char **argv)
                     close(fds[i].fd);
                     fds.erase(fds.begin() + i);
                     server->users.erase(fds[i].fd);
+					for (std::map<std::string, channel *>::iterator it = server->channels.begin(); it != server->channels.end(); it++)
+					{
+						for (size_t i = 0; i < it->second->users.size(); i++)
+						{
+							if (it->second->users[i].getSocket() == fds[i].fd)
+							{
+								;//Delete user from channel
+							}
+						}
+					}
                     break;
                 }
 
