@@ -90,7 +90,6 @@ void    check_login(char *buf, int fd, server *server)
 
 void check_channel(char *buf, int fd, server *server)
 {
-    std::cout << "user = " << server->users[fd].getUsername() << " nick = " << server->users[fd].getNickname() << " i = " << fd << std::endl;
     std::string buffer(buf);
     if (buffer.find("JOIN") != std::string::npos && (buffer.find("JOIN") == 0 || buffer[buffer.find("JOIN") - 1] == '\n')) {
         std::string username = server->users[fd].getUsername();
@@ -204,7 +203,6 @@ int main(int argc, char **argv)
                 }
 
                 //if (users[i].getNickname().empty() || users[i].getUsername().empty())
-                std::cout << "i = " << i << std::endl;
                 check_login(buffer, fds[i].fd, server);
                 check_channel(buffer, fds[i].fd, server);
                 check_priv(buffer, fds[i].fd, server);

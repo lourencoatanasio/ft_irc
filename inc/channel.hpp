@@ -23,5 +23,6 @@ class channel {
 
         std::vector<user> users;
 		std::vector<Operator> ops;
+		void	printUsers(void);
     private:
 };

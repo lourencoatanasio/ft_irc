@@ -44,11 +44,9 @@ void	user::check_operator(char *buf, int fd, server *server)
 				
 				if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0)
 				{
-					std::cout << YELLOW << server->channels[channel]->users.size() << NC << "\n";
-					std::cout << YELLOW << server->users[fd].getUsername() << NC << "\n";
-					std::cout << YELLOW << server->users[i].getUsername() << NC << "\n";
-					server->channels[channel]->add_operator(server->users[fd], channel);
-					send_all(fd, "TEST\r\n", 8, 0);
+					server->channels[channel]->printUsers();
+					server->channels[channel]->add_operator(server->channels[channel]->users[i], channel);
+					send_all(server->channels[channel]->users[i].getSocket(), "TEST\r\n", 8, 0);
 				}
 			}
 		}
