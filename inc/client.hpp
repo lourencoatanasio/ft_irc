@@ -26,6 +26,7 @@ class user
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
         void setUsername(std::string newUsername) { username = newUsername; }
+        void setOpStatus(bool status) { isOp = status; }
 		void	check_operator(char *buf, int fd, server *server);
     protected:
         int status;

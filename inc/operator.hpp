@@ -9,3 +9,5 @@ class Operator : public user
 		Operator(user &user);
 		~Operator();
 };
+
+
