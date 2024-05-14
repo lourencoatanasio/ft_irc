@@ -35,7 +35,7 @@ void     get_new_user(server *server, std::vector<pollfd> &fds)
     fds.push_back(newPfd);
     fds[0].revents = 0;
     send_all(newPfd.fd, "Welcome to the server!\n", 23, 0);
-    send_all(newPfd.fd, "Please enter the server password: PASS <password>\n", 51, 0);
+	send_all(newPfd.fd, "Please enter the server password: PASS <password>\n", 51, 0);
 }
 
 void	login_user(std::string buffer, int fd, server *server)
@@ -157,25 +157,13 @@ int	check_valid(std::string buffer)
 		std::cout << "error 1\n";
 		return (1);
 	}
-	else if (buffer[0] == ' ' || buffer[buffer.size() - 1] == ' ')
-	{
-		std::cout << "error 3\n";
-		return (1);
-	}
-	for(long unsigned int i = 0; i < buffer.size(); i++)
-	{
-		if (buffer[i] == ' ')
-		{
-			std::cout << "error 4\n";
-			return (1);
-		}
-	}
 	return (0);
 }
 
 void    get_username(char *buf, int fd, server *server)
 {
     std::string buffer(buf);
+	std::cout << "buffer = " << buffer << std::endl;
     if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n'))
     {
         if (server->users[fd].getUsername().empty()) {
@@ -185,6 +173,10 @@ void    get_username(char *buf, int fd, server *server)
 				send_all(fd, "Please enter a valid username: USER <username>\n", 47, 0);
 				return ;
 			}
+			while(username[username.size() - 1] == ' ' || username[username.size() - 1] == '\t')
+				username = username.substr(0, username.size() - 1);
+			while(username[0] == ' ' || username[0] == '\t')
+				username = username.substr(1);
             std::size_t endPos = username.find_first_of("\r\n");
             if (endPos != std::string::npos)
                 username = username.substr(0, endPos);
@@ -200,6 +192,63 @@ void    get_username(char *buf, int fd, server *server)
         send_all(fd, "Please enter your username: USER <username>\n", 45, 0);
 }
 
+void    get_username_hex(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	std::cout << "buffer = " << buffer << std::endl;
+	if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n'))
+	{
+		if (server->users[fd].getUsername().empty()) {
+			std::string username = buffer.substr(buffer.find("USER") + 5);
+			username = username.substr(0, username.find("* :realname") - 2);
+			while(username[username.size() - 1] == ' ' || username[username.size() - 1] == '\t')
+				username = username.substr(0, username.size() - 1);
+			std::size_t endPos = username.find_first_of("\r\n");
+			if (endPos != std::string::npos)
+				username = username.substr(0, endPos);
+			server->users[fd].setUsername(username);
+			std::cout << "Username set to: |" << username << "|\n";
+			server->users[fd].setStatus(1);
+			std::cout << "status = " << server->users[fd].getStatus() << "\n";
+		}
+		else
+			send_all(fd, "You may not reregister\n", 23, 0);
+	}
+	else if(server->users[fd].getUsername().empty())
+		send_all(fd, "Please enter your username: USER <username>\n", 45, 0);
+}
+
+void    get_nickname_hex(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
+	{
+		std::string oldNick = server->users[fd].getNickname();
+		std::string nick = buffer.substr(buffer.find("NICK") + 5);
+		while(nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
+			nick = nick.substr(0, nick.size() - 1);
+		std::size_t endPos = nick.find_first_of("\r\n");
+		if (endPos != std::string::npos)
+			nick = nick.substr(0, endPos);
+		if (oldNick.compare(nick) == 0)
+			return ;
+		if (!server->users[fd].getNickname().empty())
+		{
+			server->users[fd].setNickname(nick);
+			std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() + "\r\n";
+			send_all(fd, message.c_str(), message.size(), 0);
+		}
+		else
+			server->users[fd].setNickname(nick);
+		std::cout << "status = " << server->users[fd].getStatus() << "\n";
+		std::cout << "Nickname set to: |" << nick << "|\n";
+		server->users[fd].setStatus(2);
+		std::cout << "status = " << server->users[fd].getStatus() << "\n";
+	}
+	else if(server->users[fd].getNickname().empty())
+		send_all(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
+}
+
 void    get_nickname(char *buf, int fd, server *server)
 {
     std::string buffer(buf);
@@ -212,6 +261,10 @@ void    get_nickname(char *buf, int fd, server *server)
 			send_all(fd, "Please enter a valid nickname: NICK <nickname>\n", 47, 0);
 			return ;
 		}
+		while(nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
+			nick = nick.substr(0, nick.size() - 1);
+		while(nick[0] == ' ' || nick[0] == '\t')
+			nick = nick.substr(1);
         std::size_t endPos = nick.find_first_of("\r\n");
         if (endPos != std::string::npos)
             nick = nick.substr(0, endPos);
@@ -228,7 +281,6 @@ void    get_nickname(char *buf, int fd, server *server)
         std::cout << "status = " << server->users[fd].getStatus() << "\n";
         std::cout << "Nickname set to: |" << nick << "|\n";
         server->users[fd].setStatus(3);
-        std::cout << "status = " << server->users[fd].getStatus() << "\n";
     }
     else if(server->users[fd].getNickname().empty())
         send_all(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
@@ -257,13 +309,53 @@ void    get_password(char *buf, int fd, server *server)
         }
         else
         {
-            send_all(fd, "Correct password.\n\nGood chatting!\n\n", 39, 0);
             server->users[fd].setStatus(1);
             return ;
         }
     }
     else if(server->users[fd].getStatus() == 0)
         send_all(fd, "Please enter the server password: PASS <password>\n", 51, 0);
+}
+
+void    get_password_hex(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	if (buffer.find("PASS") != std::string::npos && (buffer.find("PASS") == 0 || buffer[buffer.find("PASS") - 1] == '\n'))
+	{
+		std::string pass = buffer.substr(buffer.find("PASS") + 5);
+		if(check_valid(pass) == 1)
+		{
+			send_all(fd, "Please enter a valid password: PASS <password>\n", 47, 0);
+			return ;
+		}
+		std::size_t endPos = pass.find_first_of("\r\n");
+		if (endPos != std::string::npos)
+			pass = pass.substr(0, endPos);
+		if (pass != server->getPass())
+		{
+			std::cout << server->getPass() << std::endl;
+			std::cout << pass << std::endl;
+			send_all(fd, "You've entered the wrong password, please try again\n", 53, 0);
+			return ;
+		}
+		else
+		{
+			server->users[fd].setStatus(3);
+			return ;
+		}
+	}
+	else if(server->users[fd].getStatus() == 2)
+		send_all(fd, "Please enter the server password: PASS <password>\n", 51, 0);
+}
+
+void    check_source(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	if (buffer.find("CAP") != std::string::npos && (buffer.find("CAP") == 0 || buffer[buffer.find("CAP") - 1] == '\n'))
+	{
+		server->users[fd].setFromHex(1); // Em testes
+		std::cout << "from_hex = " << server->users[fd].getFromHex() << std::endl;
+	}
 }
 
 int main(int argc, char **argv)
@@ -325,13 +417,36 @@ int main(int argc, char **argv)
                 }
 
                 std::cout << "status from user number " << i << " = " << server->users[fds[i].fd].getStatus() << std::endl;
-
-                if (server->users[fds[i].fd].getStatus() == 0)
-                    get_password(buffer, fds[i].fd, server);
-                if (server->users[fds[i].fd].getStatus() == 1)
-                    get_username(buffer, fds[i].fd, server);
-                if (server->users[fds[i].fd].getStatus() == 2)
-                    get_nickname(buffer, fds[i].fd, server);
+                if (server->users[fds[i].fd].getStatus() == -1)
+				{
+					check_source(buffer, fds[i].fd, server);
+					server->users[fds[i].fd].setStatus(0);
+				}
+				if (server->users[fds[i].fd].getFromHex() == 1 && server->users[fds[i].fd].getStatus() < 3)
+				{
+					std::cout << "if from hex\n";
+					if (server->users[fds[i].fd].getStatus() == 0)
+						get_username_hex(buffer, fds[i].fd, server);
+					if (server->users[fds[i].fd].getStatus() == 1)
+						get_nickname_hex(buffer, fds[i].fd, server);
+					if (server->users[fds[i].fd].getStatus() == 2)
+						get_password_hex(buffer, fds[i].fd, server);
+				}
+				else if (server->users[fds[i].fd].getFromHex() == 0 && server->users[fds[i].fd].getStatus() < 3)
+				{
+					std::cout << "if not from hex\n";
+					if (server->users[fds[i].fd].getStatus() == 0)
+						get_password(buffer, fds[i].fd, server);
+					if (server->users[fds[i].fd].getStatus() == 1)
+						get_username(buffer, fds[i].fd, server);
+					if (server->users[fds[i].fd].getStatus() == 2)
+						get_nickname(buffer, fds[i].fd, server);
+				}
+				if(server->users[fds[i].fd].getStatus() == 3)
+				{
+					send_all(fds[i].fd, "Congratulations, you are now connected to the server!\n", 55, 0);
+					server->users[fds[i].fd].setStatus(4);
+				}
 //                check_login(buffer, fds[i].fd, server);
 //                check_channel(buffer, fds[i].fd, server);
 //                check_priv(buffer, fds[i].fd, server);
@@ -339,3 +454,11 @@ int main(int argc, char **argv)
         }
     }
 }
+
+//CAP LS 302
+//NICK ldiogo
+//USER ldiogo 0 * :realname
+
+// testar com o hexchat
+// se o nc enviar as mensagens do hexchat
+

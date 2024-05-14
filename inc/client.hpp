@@ -28,8 +28,11 @@ class user
         void setUsername(std::string newUsername) { username = newUsername; }
         void setStatus(int newStatus) { status = newStatus; }
         int getStatus() { return status; }
+		void setFromHex(int newFromHex) { from_hex = newFromHex; }
+		int getFromHex() { return from_hex; }
     private:
         int status;
+		int from_hex;
         int socket_id;
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
