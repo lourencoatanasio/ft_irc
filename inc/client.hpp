@@ -24,6 +24,8 @@ class user
         void setUsername(std::string newUsername) { username = newUsername; }
         void setOpStatus(bool status) { isOp = status; }
 		void	check_operator(char *buf, int fd, server *server);
+		void	modeAddRemove(server *server, user &user, std::string flag, std::string channel, std::string nameOp);
+		int		modeInvite(user *user, std::string flag);
     protected:
         int status;
         int socket_id;
