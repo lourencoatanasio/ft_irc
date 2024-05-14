@@ -15,10 +15,6 @@ class user
         user(int newSocket);
         user() : clientSocket(-1) {}
         ~user();
-        void connect(); // Not sure if this is needed
-        void send(); // Not sure if this is needed
-        void receive(); // Not sure if this is needed
-        void disconnect(); // Not sure if this is needed
         int clientSocket;
         std::string getNickname() { return nickname; }
         std::string getUsername() { return username; }
@@ -38,6 +34,5 @@ class user
         socklen_t clientSize;
         std::string nickname;
         std::string username;
-        int fd;
 		bool	isOp;
 };

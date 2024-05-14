@@ -28,6 +28,7 @@ void     get_new_user(server *server, std::vector<pollfd> &fds)
         return;
     }
     user newUser(newClientSocket);
+	
     server->users[newClientSocket] = newUser;
     pollfd newPfd;
     newPfd.fd = newClientSocket;
@@ -50,7 +51,6 @@ void    check_login(char *buf, int fd, server *server)
         std::size_t endPos = nick.find_first_of("\r\n");
         if (endPos != std::string::npos)
             nick = nick.substr(0, endPos);
-        //:hcorrea-!hcorrea- NICK :user
         if (!server->users[fd].getNickname().empty())
         {
             std::string oldNick = server->users[fd].getNickname();
@@ -98,19 +98,15 @@ void check_channel(char *buf, int fd, server *server)
         std::size_t endPos = channelName.find_first_of("\t\n\r ");
         if (endPos != std::string::npos)
             channelName = channelName.substr(0, endPos);
-		std::cout << RED << "channel name: " << channelName << NC << "\n";
         if (server->channels.find(channelName) == server->channels.end()) {
             server->channels[channelName] = new channel();
-            server->channels[channelName]->add_user(server->users[fd]);
-			server->users[fd].setOpStatus(true);
-			server->channels[channelName]->add_operator(server->users[fd], channelName);
+            server->channels[channelName]->users[fd] = server->users[fd];
+			server->channels[channelName]->users[fd].setOpStatus(true);
         }
         else
-            server->channels[channelName]->add_user(server->users[fd]);
+            server->channels[channelName]->users[fd] = server->users[fd];
         std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
-        std::cout << "join channel = " << message << "." << std::endl;
         send_all(fd, message.c_str(), message.size(), 0);
-        std::cout << "Channel set to: " << channelName << std::endl;
     }
 }
 
@@ -168,8 +164,6 @@ int main(int argc, char **argv)
         if (fds[0].revents & POLLIN)
             get_new_user(server, fds);
 
-        //std::cout << "users size = " << users.size() << "fds size = " << fds.size() << std::endl;
-
         for (size_t i = 1; i < fds.size(); ++i)
         {
             if (fds[i].revents & POLLIN)
@@ -196,13 +190,12 @@ int main(int argc, char **argv)
 						{
 							if (it->second->users[i].getSocket() == fds[i].fd)
 							{
-								server->channels.erase(it);//Delete user from channel
+								server->channels.erase(it);
 							}
 						}
 					}
                     break;
                 }
-                //if (users[i].getNickname().empty() || users[i].getUsername().empty())
                 check_login(buffer, fds[i].fd, server);
                 check_channel(buffer, fds[i].fd, server);
                 check_priv(buffer, fds[i].fd, server);
