@@ -119,17 +119,39 @@ void check_priv(char *buf, int fd, server *server)
         std::size_t channelEndPos = buffer.find(" ", buffer.find("PRIVMSG") + 8);
         std::string channel = buffer.substr(buffer.find("PRIVMSG") + 8, channelEndPos - (buffer.find("PRIVMSG") + 8));
 
-        std::size_t messageStartPos = buffer.find(":", channelEndPos);
-        if (messageStartPos != std::string::npos) {
-            std::string receivedMessage = buffer.substr(messageStartPos + 1);
-            receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
-            receivedMessage.erase(receivedMessage.find_last_not_of(' ') + 1);
+        if (channel.at(0) == '#') {
+            if (server->channels.find(channel) == server->channels.end()) {
+                std::string message = ":Channel does not exist\r\n";
+                send_all(fd, message.c_str(), message.size(), 0);
+                return;
+            }
+            std::size_t messageStartPos = buffer.find(":", channelEndPos);
+            if (messageStartPos != std::string::npos) {
+                std::string receivedMessage = buffer.substr(messageStartPos + 1);
+                receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
+                receivedMessage.erase(receivedMessage.find_last_not_of(' ') + 1);
 
-            for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++)
-            {
-                std::string message = ":" + server->channels[channel]->users[i].getNickname() + "!" + server->channels[channel]->users[i].getUsername() + " PRIVMSG " + channel + " :" + receivedMessage + "\r\n";
-                if (server->channels[channel]->users[i].getSocket() != fd)
-                    send_all(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
+                for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
+                    std::string message = ":" + nick + "!" + username + " PRIVMSG " + channel + " :" + receivedMessage + "\r\n";
+                    if (server->channels[channel]->users[i].getSocket() != fd)
+                        send_all(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
+                }
+            }
+        }
+        else {
+            std::size_t messageStartPos = buffer.find(":", channelEndPos);
+            if (messageStartPos != std::string::npos) {
+                std::string receivedMessage = buffer.substr(messageStartPos + 1);
+                receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
+                receivedMessage.erase(receivedMessage.find_last_not_of(' ') + 1);
+                std::map<int, user>::iterator it;
+                for (it = server->users.begin(); it != server->users.end(); ++it) {
+                    std::string message = ":" + nick + "!" + username + " PRIVMSG " + it->second.getNickname() + " :" + receivedMessage + "\r\n";
+                    if (it->second.getNickname() == channel) {
+                        std::cout << "Sending private message to " << it->second.getNickname() << std::endl;
+                        send_all(it->second.getSocket(), message.c_str(), message.size(), 0);
+                    }
+                }
             }
         }
     }
