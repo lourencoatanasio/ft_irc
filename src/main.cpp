@@ -1,6 +1,6 @@
 #include "../inc/main.hpp"
 
-ssize_t send_all(int socket, const void *buffer, size_t length, int flags)
+ssize_t	send_user(int socket, const void *buffer, size_t length, int flags)
 {
     ssize_t totalSentBytes = 0;
     const char *bufferPtr = (const char*) buffer;
@@ -19,7 +19,16 @@ ssize_t send_all(int socket, const void *buffer, size_t length, int flags)
     return totalSentBytes;
 }
 
-void     get_new_user(server *server, std::vector<pollfd> &fds)
+ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags)
+{
+	ssize_t totalSentBytes = 0;
+
+	for (size_t i = 0; i < server->users.size(); i++)
+		totalSentBytes += send_user(server->users[i].clientSocket, buffer, lenght, flags);
+	return (totalSentBytes);
+}
+
+void	get_new_user(server *server, std::vector<pollfd> &fds)
 {
     int newClientSocket = accept(server->socket_id, NULL, NULL);
     if (newClientSocket == -1)
@@ -35,9 +44,9 @@ void     get_new_user(server *server, std::vector<pollfd> &fds)
     newPfd.events = POLLIN;
     fds.push_back(newPfd);
     fds[0].revents = 0;
-    send_all(newPfd.fd, "Welcome to the server!\n", 23, 0);
-    send_all(newPfd.fd, "Please enter your nickname and your user: \n", 43, 0);
-    send_all(newPfd.fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
+    send_user(newPfd.fd, "Welcome to the server!\n", 23, 0);
+    send_user(newPfd.fd, "Please enter your nickname and your user: \n", 43, 0);
+    send_user(newPfd.fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
 }
 
 void    check_login(char *buf, int fd, server *server)
@@ -56,7 +65,7 @@ void    check_login(char *buf, int fd, server *server)
             std::string oldNick = server->users[fd].getNickname();
             server->users[fd].setNickname(nick);
             std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() + "\r\n";
-            send_all(fd, message.c_str(), message.size(), 0);
+            send_user(fd, message.c_str(), message.size(), 0);
         }
         else
             server->users[fd].setNickname(nick);
@@ -74,18 +83,18 @@ void    check_login(char *buf, int fd, server *server)
             std::cout << "Username set to: " << username << std::endl;
         }
         else
-            send_all(fd, "You may not reregister\n", 23, 0);
+            send_user(fd, "You may not reregister\n", 23, 0);
     }
 
 	if (nick.empty() && username.empty())
 	{
-		send_all(fd, "Please enter your nickname and your user: \n", 43, 0);
-		send_all(fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
+		send_user(fd, "Please enter your nickname and your user: \n", 43, 0);
+		send_user(fd, "NICK <nickname>\nUSER <username>\n", 32, 0);
 	}
 	else if (username.empty())
-		send_all(fd, "Please enter your nickname: \nNICK <nickname>\n", 46, 0);
+		send_user(fd, "Please enter your nickname: \nNICK <nickname>\n", 46, 0);
 	else if (nick.empty())
-		send_all(fd, "Please enter your username: \nUSER <username>\n", 46, 0);
+		send_user(fd, "Please enter your username: \nUSER <username>\n", 46, 0);
 }
 
 void check_channel(char *buf, int fd, server *server)
@@ -106,7 +115,7 @@ void check_channel(char *buf, int fd, server *server)
         else
             server->channels[channelName]->users[fd] = server->users[fd];
         std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
-        send_all(fd, message.c_str(), message.size(), 0);
+        send_user(fd, message.c_str(), message.size(), 0);
     }
 }
 
@@ -129,7 +138,7 @@ void check_priv(char *buf, int fd, server *server)
             {
                 std::string message = ":" + server->channels[channel]->users[i].getNickname() + "!" + server->channels[channel]->users[i].getUsername() + " PRIVMSG " + channel + " :" + receivedMessage + "\r\n";
                 if (server->channels[channel]->users[i].getSocket() != fd)
-                    send_all(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
+                    send_user(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
             }
         }
     }

@@ -3,10 +3,11 @@
 //
 
 #include "../inc/channel.hpp"
-#include "../inc/operator.hpp"
 
 channel::channel()
 {
+	topicMode = false;
+	inviteMode = false;
 }
 
 channel::~channel()
