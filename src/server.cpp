@@ -4,8 +4,9 @@
 
 #include "../inc/server.hpp"
 
-server::server()
+server::server(char *password)
 {
+    this->password = std::string(password);
     this->server_ip = "127.0.0.2";
     this->socket_id = socket(AF_INET, SOCK_STREAM, 0);
     int optval = 1;

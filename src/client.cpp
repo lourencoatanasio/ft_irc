@@ -15,6 +15,7 @@ user::user(int newSocket)
         exit(EXIT_FAILURE);
     }
     status = 0;
+	from_nc = 0;
     std::cout << "New client connected" << std::endl;
 }
 

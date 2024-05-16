@@ -15,6 +15,10 @@ class user
         user(int newSocket);
         user() : clientSocket(-1) {}
         ~user();
+        void connect(); // Not sure if this is needed
+        void send(); // Not sure if this is needed
+        void receive(); // Not sure if this is needed
+        void disconnect(); // Not sure if this is needed
         int clientSocket;
         std::string getNickname() { return nickname; }
         std::string getUsername() { return username; }
@@ -22,6 +26,11 @@ class user
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
         void setUsername(std::string newUsername) { username = newUsername; }
+        void setStatus(int newStatus) { status = newStatus; }
+        int getStatus() { return status; }
+		void setFromNc(int newFromnc) { from_nc = newFromnc; }
+		int getFromNc() { return from_nc; }
+    private:
         void setOpStatus(bool status) { isOp = status; }
 		void	check_operator(char *buf, int fd, server *server);
 		void	modeOperator(server *server, user &newOp, std::string flag, std::string channel);
@@ -33,6 +42,7 @@ class user
 		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
     protected:
         int status;
+		int from_nc;
         int socket_id;
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
