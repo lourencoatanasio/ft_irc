@@ -250,6 +250,35 @@ void    check_source(int fd, server *server, int ret)
 	}
 }
 
+void    login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
+{
+	if (server->users[fds[i].fd].getFromNc() == 0 && server->users[fds[i].fd].getStatus() < 3)
+	{
+		std::cout << "if from hex\n";
+		if (server->users[fds[i].fd].getStatus() == 0)
+			get_username_hex(buffer, fds[i].fd, server);
+		if (server->users[fds[i].fd].getStatus() == 1)
+			get_nickname_hex(buffer, fds[i].fd, server);
+		if (server->users[fds[i].fd].getStatus() == 2)
+			get_password_hex(buffer, fds[i].fd, server);
+	}
+	else if (server->users[fds[i].fd].getFromNc() == 1 && server->users[fds[i].fd].getStatus() < 3)
+	{
+		std::cout << "if not from hex\n";
+		if (server->users[fds[i].fd].getStatus() == 0)
+			get_password(buffer, fds[i].fd, server);
+		if (server->users[fds[i].fd].getStatus() == 1)
+			get_username(buffer, fds[i].fd, server);
+		if (server->users[fds[i].fd].getStatus() == 2)
+			get_nickname(buffer, fds[i].fd, server);
+	}
+	if(server->users[fds[i].fd].getStatus() == 3)
+	{
+		send_all(fds[i].fd, "Congratulations, you are now connected to the server!\r\n", 55, 0);
+		server->users[fds[i].fd].setStatus(4);
+	}
+}
+
 int main(int argc, char **argv)
 {
     (void)argv;
@@ -285,7 +314,7 @@ int main(int argc, char **argv)
 
         //std::cout << "users size = " << users.size() << "fds size = " << fds.size() << std::endl;
 
-        for (size_t i = 1; i < fds.size(); i++)
+        for (size_t	 i = 1; i < fds.size(); i++)
         {
 			check_source(fds[i].fd, server, ret);
 			if (fds[i].revents & POLLIN)
@@ -309,38 +338,8 @@ int main(int argc, char **argv)
                     break;
                 }
 
-                std::cout << "status from user number " << i << " = " << server->users[fds[i].fd].getStatus() << std::endl;
-				std::cout << "from nc = " << server->users[fds[i].fd].getFromNc() << std::endl;
-				if (server->users[fds[i].fd].getFromNc() == 0 && server->users[fds[i].fd].getStatus() < 3)
-				{
-					std::cout << "if from hex\n";
-					if (server->users[fds[i].fd].getStatus() == 0)
-						get_username_hex(buffer, fds[i].fd, server);
-					if (server->users[fds[i].fd].getStatus() == 1)
-						get_nickname_hex(buffer, fds[i].fd, server);
-					if (server->users[fds[i].fd].getStatus() == 2)
-						get_password_hex(buffer, fds[i].fd, server);
-				}
-				else if (server->users[fds[i].fd].getFromNc() == 1 && server->users[fds[i].fd].getStatus() < 3)
-				{
-					std::cout << "if not from hex\n";
-					if (server->users[fds[i].fd].getStatus() == 0)
-						get_password(buffer, fds[i].fd, server);
-					if (server->users[fds[i].fd].getStatus() == 1)
-						get_username(buffer, fds[i].fd, server);
-					if (server->users[fds[i].fd].getStatus() == 2)
-						get_nickname(buffer, fds[i].fd, server);
-				}
-				if(server->users[fds[i].fd].getStatus() == 3)
-				{
-					send_all(fds[i].fd, "Congratulations, you are now connected to the server!\r\n", 55, 0);
-					server->users[fds[i].fd].setStatus(4);
-				}
+				login(i, server, fds, buffer);
             }
         }
     }
 }
-
-// testar com o hexchat
-// se o nc enviar as mensagens do hexchat
-
