@@ -139,7 +139,7 @@ void	user::check_operator(char *buf, int fd, server *server)
         if (server->channels[channel]->users[fd].isOp == false)
         {
             std::string message = ":" + channel + " :You're not channel operator\r\n";
-            send_all(fd, message.c_str(), message.size(), 0);
+            send_user(fd, message.c_str(), message.size(), 0);
             return;
         }
         std::size_t endPos = nameOp.find_first_of("\t\n\r ");
@@ -157,7 +157,7 @@ void	user::check_operator(char *buf, int fd, server *server)
                     std::string message = ":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" + this->nickname + "\r\n";
                     for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
                     {
-                        send_all(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
+                        send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
                     }
                     break;
                 }

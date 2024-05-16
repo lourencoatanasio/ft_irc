@@ -131,7 +131,7 @@ void check_priv(char *buf, int fd, server *server)
         if (channel.at(0) == '#') {
             if (server->channels.find(channel) == server->channels.end()) {
                 std::string message = ":Channel does not exist\r\n";
-                send_all(fd, message.c_str(), message.size(), 0);
+                send_user(fd, message.c_str(), message.size(), 0);
                 return;
             }
             std::size_t messageStartPos = buffer.find(":", channelEndPos);
@@ -143,7 +143,7 @@ void check_priv(char *buf, int fd, server *server)
                 for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
                     std::string message = ":" + nick + "!" + username + " PRIVMSG " + channel + " :" + receivedMessage + "\r\n";
                     if (server->channels[channel]->users[i].getSocket() != fd)
-                        send_all(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
+                        send_user(server->channels[channel]->users[i].getSocket(), message.c_str(), message.size(), 0);
                 }
             }
         }
@@ -158,7 +158,7 @@ void check_priv(char *buf, int fd, server *server)
                     std::string message = ":" + nick + "!" + username + " PRIVMSG " + it->second.getNickname() + " :" + receivedMessage + "\r\n";
                     if (it->second.getNickname() == channel) {
                         std::cout << "Sending private message to " << it->second.getNickname() << std::endl;
-                        send_all(it->second.getSocket(), message.c_str(), message.size(), 0);
+                        send_user(it->second.getSocket(), message.c_str(), message.size(), 0);
                     }
                 }
             }
