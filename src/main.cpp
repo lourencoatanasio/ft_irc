@@ -19,12 +19,14 @@ ssize_t	send_user(int socket, const void *buffer, size_t length, int flags)
     return totalSentBytes;
 }
 
-ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags)
+ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags, std::string channel)
 {
 	ssize_t totalSentBytes = 0;
 
-	for (size_t i = 0; i < server->users.size(); i++)
-		totalSentBytes += send_user(server->users[i].clientSocket, buffer, lenght, flags);
+	for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
+	{
+		totalSentBytes += send_user(server->channels[channel]->users[j].getSocket(), buffer, lenght, flags);
+	}
 	return (totalSentBytes);
 }
 
@@ -99,7 +101,7 @@ void    check_login(char *buf, int fd, server *server)
 
 void check_channel(char *buf, int fd, server *server)
 {
-    std::string buffer(buf);
+    std::string buffer(buf), message;
     if (buffer.find("JOIN") != std::string::npos && (buffer.find("JOIN") == 0 || buffer[buffer.find("JOIN") - 1] == '\n')) {
         std::string username = server->users[fd].getUsername();
         std::string nick = server->users[fd].getNickname();
@@ -111,10 +113,16 @@ void check_channel(char *buf, int fd, server *server)
             server->channels[channelName] = new channel();
             server->channels[channelName]->users[fd] = server->users[fd];
 			server->channels[channelName]->users[fd].setOpStatus(true);
+			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
         }
+		else if (server->channels[channelName]->getMaxUsers() < (int)server->channels[channelName]->users.size()
+		&& server->channels[channelName]->getMaxUsers() > 0)
+			message = ":" + channelName + " :Cannot join channel (+l)\r\n";
         else
+		{
             server->channels[channelName]->users[fd] = server->users[fd];
-        std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
+			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
+		}
         send_user(fd, message.c_str(), message.size(), 0);
     }
 }

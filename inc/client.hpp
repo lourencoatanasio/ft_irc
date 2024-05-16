@@ -30,6 +30,7 @@ class user
 		void	mode(server *server, char *buffer, int fd);
 		int		modeCheck(server *server, std::string channel, int fd);
 		int		modePassword(server *server, std::string channel, std::string flag, std::string key);
+		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
     protected:
         int status;
         int socket_id;

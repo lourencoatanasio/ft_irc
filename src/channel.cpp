@@ -8,6 +8,7 @@ channel::channel()
 {
 	topicMode = false;
 	inviteMode = false;
+	maxUsers = 0;
 }
 
 channel::~channel()

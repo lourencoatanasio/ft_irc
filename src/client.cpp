@@ -31,7 +31,7 @@ int	user::modeInvite(server *server, std::string channel, std::string flag)
 	else
 		return (1);
 	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + "\r\n";
-	send_all(server, message.c_str(), message.size(), 0);
+	send_all(server, message.c_str(), message.size(), 0, channel);
 	return (0);
 }
 
@@ -44,7 +44,7 @@ int	user::modeTopic(server *server, std::string channel, std::string flag)
 	else
 		return (1);
 	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + "\r\n";
-	send_all(server, message.c_str(), message.size(), 0);
+	send_all(server, message.c_str(), message.size(), 0, channel);
 	return (0); 
 };
 
@@ -57,7 +57,7 @@ void	user::modeOperator(server *server, user &newOp, std::string channel, std::s
 	else
 		return ;
 	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + " " + newOp.getUsername() + "\r\n";
-	send_all(server, message.c_str(), message.size(), 0);
+	send_all(server, message.c_str(), message.size(), 0, channel);
 }
 
 int	user::modePassword(server *server, std::string channel, std::string flag, std::string key)
@@ -81,7 +81,30 @@ int	user::modePassword(server *server, std::string channel, std::string flag, st
 		send_user(clientSocket, message.c_str(), message.size(), 0);
 		return (1);
 	}
-	send_all(server, message.c_str(), message.size(), 0);
+	send_all(server, message.c_str(), message.size(), 0, channel);
+	return (0);
+}
+
+int	user::modeLimit(server *server, std::string channel, std::string flag, std::string amount)
+{
+	std::string message;
+	if (flag.compare("+l") == 0 && server->channels[channel]->getMaxUsers() >= 0)
+	{
+		int	n = atoi(amount.c_str());
+		if (n <= 0 || n == server->channels[channel]->getMaxUsers())
+			return (1);
+		server->channels[channel]->setmaxUsers(n);
+		size_t nSize = amount.find_first_not_of("0123456789");
+		message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + " " + amount.substr(0, nSize) + "\r\n";
+	}
+	else if (flag.compare("-l") == 0 && server->channels[channel]->getMaxUsers() > 0)
+	{
+		server->channels[channel]->setmaxUsers(0);
+		message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + "\r\n";
+	}
+	else
+		return (1);
+	send_all(server, message.c_str(), message.size(), 0, channel);
 	return (0);
 }
 
@@ -91,7 +114,7 @@ int	user::modeCheck(server *server, std::string channel, int fd)
 		return (1);
 	if (server->channels[channel]->users[fd].isOp == false)
 	{
-		std::string message = ":" + channel + " :You're not channel operator\r\n";
+		std::string message = ":" + channel + " 482 " + nickname + " " + channel + " :You're not channel operator\r\n";
 		send_user(fd, message.c_str(), message.size(), 0);
 		return (1);
 	}
@@ -106,7 +129,8 @@ void	user::mode(server *server, char *buffer, int fd)
 	
 	if (server->channels[channel]->users[fd].modeCheck(server, channel, fd))
 		return ;
-	if (server->channels[channel]->users[fd].modeInvite(server, channel, flag) &&
+	if (server->channels[channel]->users[fd].modeLimit(server, channel, flag, nameOp) &&
+		server->channels[channel]->users[fd].modeInvite(server, channel, flag) &&
 	server->channels[channel]->users[fd].modeTopic(server, channel, flag) &&
 	server->channels[channel]->users[fd].modePassword(server, channel, flag, nameOp))
 		return ;
