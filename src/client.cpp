@@ -117,7 +117,9 @@ void	user::mode(server *server, char *buffer, int fd)
 	{	
 		if ((server->channels[channel]->users[i].getUsername().compare(nameOp) == 0 
 		|| server->channels[channel]->users[i].getNickname().compare(nameOp) == 0))
-			modeOperator(server, server->channels[channel]->users[i], flag, channel);
+		{
+			modeOperator(server, server->channels[channel]->users[i], channel, flag);
+		}
 	}
 }
 
