@@ -13,8 +13,8 @@ user::user(int newSocket)
         std::cerr << "Can't accept client!";
         exit(EXIT_FAILURE);
     }
-    status = -1;
-	from_hex = 0;
+    status = 0;
+	from_nc = 0;
     std::cout << "New client connected" << std::endl;
 }
 
