@@ -131,4 +131,37 @@ void	user::check_operator(char *buf, int fd, server *server)
 	{
 		mode(server, buf, fd);
 	}
+    else if (command.compare("KICK") == 0)
+    {
+		std::string	command, channel, flag, nameOp;
+		std::istringstream iss2(buffer);
+		iss2 >> command >> channel >> flag >> nameOp;
+        if (server->channels[channel]->users[fd].isOp == false)
+        {
+            std::string message = ":" + channel + " :You're not channel operator\r\n";
+            send_all(fd, message.c_str(), message.size(), 0);
+            return;
+        }
+        std::size_t endPos = nameOp.find_first_of("\t\n\r ");
+        if (endPos != std::string::npos)
+            nameOp = nameOp.substr(0, endPos);
+        if (server->channels.find(channel) != server->channels.end())
+        {
+            for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++)
+            {
+                std::string u = server->channels[channel]->users[i].getUsername();
+                std::string n = server->channels[channel]->users[i].getNickname();
+                if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0)
+                {
+                    std::cout << flag << std::endl;
+                    std::string message = ":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" + this->nickname + "\r\n";
+                    for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
+                    {
+                        send_all(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }
