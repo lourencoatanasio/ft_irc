@@ -367,6 +367,12 @@ void    login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 	}
 }
 
+void	sigHandler()
+{
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
@@ -390,7 +396,8 @@ int main(int argc, char **argv)
 
     while (true) // Main server loop
     {
-        int ret = poll(fds.data(), fds.size(), 100); // Wait indefinitely for events
+		sigHandler();
+        int ret = poll(fds.data(), fds.size(), 100);
 
 		if (ret == -1)
         {
