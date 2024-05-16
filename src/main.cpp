@@ -256,7 +256,7 @@ void    get_password_hex(char *buf, int fd, server *server)
 		std::string pass = buffer.substr(buffer.find("PASS") + 5);
 		if(check_valid(pass) == 1)
 		{
-			send_user(fd, "Please enter a valid password: PASS <password>\r\n", 47, 0);
+			send_user(fd, "Please enter a valid password: PASS <password>\r\n", 50	, 0);
 			return ;
 		}
 		std::size_t endPos = pass.find_first_of("\r\n");
@@ -266,7 +266,7 @@ void    get_password_hex(char *buf, int fd, server *server)
 		{
 			std::cout << server->getPass() << std::endl;
 			std::cout << pass << std::endl;
-			send_user(fd, "You've entered the wrong password, please try again\r\n", 53, 0);
+			send_user(fd, "You've entered the wrong password, please try again\r\n", 55, 0);
 			return ;
 		}
 		else
@@ -279,6 +279,8 @@ void    get_password_hex(char *buf, int fd, server *server)
 	{
 		return ;
 	}
+	else
+		send_user(fd, "Please enter the server password: /PASS <password>\r\n", 54, 0);
 }
 
 void check_priv(char *buf, int fd, server *server)
@@ -435,9 +437,12 @@ int main(int argc, char **argv)
                     break;
                 }
 				login(i, server, fds, buffer);
-                check_channel(buffer, fds[i].fd, server);
-                check_priv(buffer, fds[i].fd, server);
-				server->users[fds[i].fd].check_operator(buffer, fds[i].fd, server);
+				if(server->users[fds[i].fd].getStatus() == 4)
+				{
+					check_channel(buffer, fds[i].fd, server);
+					check_priv(buffer, fds[i].fd, server);
+					server->users[fds[i].fd].check_operator(buffer, fds[i].fd, server);
+				}
             }
         }
     }
