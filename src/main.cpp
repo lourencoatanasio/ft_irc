@@ -64,7 +64,7 @@ void    check_login(char *buf, int fd, server *server)
         {
             std::string oldNick = server->users[fd].getNickname();
             server->users[fd].setNickname(nick);
-            std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() + "\r\n";
+            std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK :" + server->users[fd].getNickname() + "\r\n";
             send_user(fd, message.c_str(), message.size(), 0);
         }
         else
@@ -112,10 +112,22 @@ void check_channel(char *buf, int fd, server *server)
             server->channels[channelName]->users[fd] = server->users[fd];
 			server->channels[channelName]->users[fd].setOpStatus(true);
         }
-        else
+        else if (server->channels[channelName]->getInviteMode() == true) {
+            std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+            return;
+        } else
             server->channels[channelName]->users[fd] = server->users[fd];
+        //:nick1!user2@F456A.75198A.60D2B2.ADA236.IP JOIN #teste * :realname
         std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
-        send_user(fd, message.c_str(), message.size(), 0);
+        send_all(server, message.c_str(), message.size(), 0);
+        if (server->channels[channelName]->getTopic().empty() == false) {
+            std::string message = ":" + channelName + " 332 " + nick + " " + channelName + " :" + server->channels[channelName]->getTopic() + "\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+            message = ":" + channelName + " 333 " + nick + " " + channelName + " " + server->channels[channelName]->getNick() + "!" + server->channels[channelName]->getUser() +
+                      " 1715866598\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+        }
     }
 }
 
