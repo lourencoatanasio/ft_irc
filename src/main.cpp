@@ -176,7 +176,7 @@ void    get_nickname(char *buf, int fd, server *server)
         if (!server->users[fd].getNickname().empty())
         {
             server->users[fd].setNickname(nick);
-            std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() + "\r\n";
+            std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK :" + server->users[fd].getNickname() + "\r\n";
             send_user(fd, message.c_str(), message.size(), 0);
         }
         else
@@ -236,7 +236,7 @@ void check_channel(char *buf, int fd, server *server)
 			server->channels[channelName]->users[fd].setOpStatus(true);
 			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
         }
-		else if (server->channels[channelName]->getMaxUsers() < (int)server->channels[channelName]->users.size()
+		/* else if (server->channels[channelName]->getMaxUsers() < (int)server->channels[channelName]->users.size()
 		&& server->channels[channelName]->getMaxUsers() > 0)
 			message = ":" + channelName + " :Cannot join channel (+l)\r\n";
         else
@@ -244,7 +244,23 @@ void check_channel(char *buf, int fd, server *server)
             server->channels[channelName]->users[fd] = server->users[fd];
 			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
 		}
-        send_user(fd, message.c_str(), message.size(), 0);
+        send_user(fd, message.c_str(), message.size(), 0); */
+        else if (server->channels[channelName]->getInviteMode() == true) {
+            std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+            return;
+        } else
+            server->channels[channelName]->users[fd] = server->users[fd];
+        //:nick1!user2@F456A.75198A.60D2B2.ADA236.IP JOIN #teste * :realname
+        std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
+        send_all(server, message.c_str(), message.size(), 0, channelName);
+        if (server->channels[channelName]->getTopic().empty() == false) {
+            std::string message = ":" + channelName + " 332 " + nick + " " + channelName + " :" + server->channels[channelName]->getTopic() + "\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+            message = ":" + channelName + " 333 " + nick + " " + channelName + " " + server->channels[channelName]->getNick() + "!" + server->channels[channelName]->getUser() +
+                      " 1715866598\r\n";
+            send_user(fd, message.c_str(), message.size(), 0);
+        }
     }
 }
 
