@@ -22,10 +22,22 @@ class user
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
         void setUsername(std::string newUsername) { username = newUsername; }
+        void setStatus(int newStatus) { status = newStatus; }
+        int getStatus() { return status; }
+		void setFromNc(int newFromnc) { from_nc = newFromnc; }
+		int getFromNc() { return from_nc; }
         void setOpStatus(bool status) { isOp = status; }
 		void	check_operator(char *buf, int fd, server *server);
+		void	modeOperator(server *server, user &newOp, std::string flag, std::string channel);
+		int		modeInvite(server *server, std::string flag, std::string channel);
+		int		modeTopic(server *server, std::string flag, std::string channel);
+		void	mode(server *server, char *buffer, int fd);
+		int		modeCheck(server *server, std::string channel, int fd);
+		int		modePassword(server *server, std::string channel, std::string flag, std::string key);
+		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
     protected:
         int status;
+		int from_nc;
         int socket_id;
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];

@@ -17,7 +17,7 @@ class user;
 class server
 {
     public:
-        server();
+        server(char *password);
         ~server();
         void connect(); // Not sure if this is needed
         void send(); // Not sure if this is needed
@@ -26,6 +26,7 @@ class server
         int socket_id;
         std::map<std::string, channel*> channels;
         std::map<int, user> users;
+        std::string getPass() { return password; }
     private:
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
@@ -34,4 +35,5 @@ class server
         sockaddr_in client;
         socklen_t clientSize;
         const char *server_ip;
+        std::string password;
 };
