@@ -78,7 +78,7 @@ int	user::modePassword(server *server, std::string channel, std::string flag, st
 	}
 	else if (flag.compare("+k") == 0 || (flag.compare("-k") == 0 && key.compare(server->channels[channel]->getPassword()) != 0))
 	{
-		message = ":" + channel + " :Channel key already set\r\n";
+		message = ":" + channel + " 467 " + this->nickname + " " + channel + " :Channel key already set\r\n";
 		send_user(clientSocket, message.c_str(), message.size(), 0);
 		return (1);
 	}
@@ -109,10 +109,8 @@ int	user::modeLimit(server *server, std::string channel, std::string flag, std::
 	return (0);
 }
 
-int	user::modeCheck(server *server, std::string channel, int fd)
+int	user::opCheck(server *server, std::string channel, int fd)
 {
-	if (server->channels.find(channel) == server->channels.end())
-		return (1);
 	if (server->channels[channel]->users[fd].isOp == false)
 	{
 		std::string message = ":" + channel + " 482 " + this->nickname + " " + channel + " :You're not channel operator\r\n";
@@ -122,13 +120,14 @@ int	user::modeCheck(server *server, std::string channel, int fd)
 	return (0);
 }
 
-void	user::mode(server *server, char *buffer, int fd)
+void	user::mode(server *server, char *buf, int fd)
 {
 	std::string	command, channel, flag, nameOp;
-	std::istringstream iss2(buffer);
+	std::istringstream iss2(buf);
 	iss2 >> command >> channel >> flag >> nameOp;
 	
-	if (server->channels[channel]->users[fd].modeCheck(server, channel, fd))
+	if (server->channels[channel]->users[fd].opCheck(server, channel, fd) 
+		|| server->channels.find(channel) == server->channels.end())
 		return ;
 	if (server->channels[channel]->users[fd].modeLimit(server, channel, flag, nameOp) &&
 		server->channels[channel]->users[fd].modeInvite(server, channel, flag) &&
@@ -148,135 +147,136 @@ void	user::mode(server *server, char *buffer, int fd)
 	}
 }
 
+void	user::kick(server *server, char *buf, int fd)
+{
+	std::string command, channel, flag, nameOp;
+	std::istringstream iss2(buf);
+	iss2 >> command >> channel >> flag >> nameOp;
+	if (server->channels[channel]->users[fd].opCheck(server, channel, fd))
+		return;
+	std::size_t endPos = nameOp.find_first_of("\t\n\r ");
+	if (endPos != std::string::npos)
+		nameOp = nameOp.substr(0, endPos);
+	if (server->channels.find(channel) != server->channels.end()) {
+		for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
+			std::string u = server->channels[channel]->users[i].getUsername();
+			std::string n = server->channels[channel]->users[i].getNickname();
+			if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0) {
+				std::string message =
+						":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
+						this->nickname + "\r\n";
+				for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++) {
+					send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
+				}
+				server->channels[channel]->users.erase(i);
+				break;
+			}
+		}
+	}
+}
+
+void	user::invite(server *server, char *buf, int fd)
+{
+	std::string command, channel, nameOp;
+	std::istringstream iss2(buf);
+	iss2 >> command >> nameOp >> channel;
+	bool userExists = false;
+
+	for (std::size_t i = 0; i < server->users.size(); i++) {
+		if (server->users[i].getNickname().compare(nameOp) == 0) {
+			userExists = true;
+			break;
+		}
+	}
+
+	if (!userExists) {
+		std::string message = ":" + channel + " 401 " + this->nickname + " " + nameOp + " :No such nick\r\n";
+		send_user(fd, message.c_str(), message.size(), 0);
+		return;
+	}
+
+	if (server->channels.find(channel) == server->channels.end()) {
+		std::string message = ":" + channel + " 403 " + this->nickname + " " + channel + " :No such channel\r\n";
+		send_user(fd, message.c_str(), message.size(), 0);
+		return;
+	}
+
+	if (server->channels[channel]->getInviteMode() == true) {
+		if (server->channels[channel]->users[fd].opCheck(server, channel, fd))
+			return ;
+	}
+
+	std::size_t endPos = nameOp.find_first_of("\t\n\r ");
+	if (endPos != std::string::npos)
+		nameOp = nameOp.substr(0, endPos);
+
+	for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
+		if (server->channels[channel]->users[i].getNickname().compare(nameOp) == 0) {
+			std::string message = ":" + channel + " 443 " + this->nickname + " " + nameOp + " " + channel + " :is already on channel\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			return;
+		}
+	}
+
+	for (std::size_t i = 0; i < server->users.size(); i++) {
+		if (server->users[i].getNickname().compare(nameOp) == 0) {
+			std::string message = ":" + this->nickname + "!" + this->username + " INVITE " + nameOp + " " +
+									channel + "\r\n";
+			send_user(server->users[i].getSocket(), message.c_str(), message.size(), 0);
+			message = ":" + channel + " 341 " + this->nickname + " " + nameOp + " " + channel + "\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			return;
+		}
+	}
+}
+
+void	user::topic(server *server, char *buf, int fd)
+{
+	std::string command, channel, topic;
+	std::istringstream iss2(buf);
+	iss2 >> command >> channel;
+	std::getline(iss2, topic);
+	topic = topic.substr(1);
+	std::size_t endPos = topic.find_first_of("\t\n\r");
+	if (!topic.empty() && topic[0] == ':')
+		topic = topic.substr(1);
+	if (endPos != std::string::npos)
+		topic = topic.substr(0, endPos);
+	if (topic.empty() == true) {
+		if (server->channels[channel]->getTopic().empty() == true) {
+			std::string message = ":" + channel + " 331 " + this->nickname + " " + channel + " :No topic is set.\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			return;
+		}
+		std::string message = ":" + channel + " 332 " + this->nickname + " " + channel + " :" + server->channels[channel]->getTopic() + "\r\n";
+		send_user(fd, message.c_str(), message.size(), 0);
+		message = ":" + channel + " 333 " + this->nickname + " " + channel + " " + server->channels[channel]->getNick() + "!" + server->channels[channel]->getUser() +
+					" 1715866598\r\n";
+		send_user(fd, message.c_str(), message.size(), 0);
+		return;
+	} else if (server->channels[channel]->getTopicMode() == true) {
+		if (server->channels[channel]->users[fd].opCheck(server, channel, fd))
+			return;
+	}
+	std::string message = ":" + this->nickname + "!" + this->username + " TOPIC " + channel + " :" + topic +
+							"\r\n";
+	send_all(server, message.c_str(), message.size(), 0, channel);
+	server->channels[channel]->setTopic(topic);
+	server->channels[channel]->setNick(this->nickname);
+	server->channels[channel]->setUser(this->username);
+}
+
 void	user::check_operator(char *buf, int fd, server *server) {
     std::string buffer(buf), command, channel, flag;
     std::istringstream iss(buffer);
     iss >> command >> channel >> flag;
 
-    if (command.compare("MODE") == 0 && !flag.empty()) {
-        mode(server, buf, fd);
-    } else if (command.compare("KICK") == 0) {
-        std::string command, channel, flag, nameOp;
-        std::istringstream iss2(buffer);
-        iss2 >> command >> channel >> flag >> nameOp;
-        if (server->channels[channel]->users[fd].isOp == false) {
-            std::string message = ":" + channel + " 482 " + this->nickname + " " + channel + " :You're not channel operator\r\n";
-            send_user(fd, message.c_str(), message.size(), 0);
-            return;
-        }
-        std::size_t endPos = nameOp.find_first_of("\t\n\r ");
-        if (endPos != std::string::npos)
-            nameOp = nameOp.substr(0, endPos);
-        if (server->channels.find(channel) != server->channels.end()) {
-            for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
-                std::string u = server->channels[channel]->users[i].getUsername();
-                std::string n = server->channels[channel]->users[i].getNickname();
-                if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0) {
-                    std::string message =
-                            ":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
-                            this->nickname + "\r\n";
-                    for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++) {
-                        send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
-                    }
-                    server->channels[channel]->users.erase(i);
-                    break;
-                }
-            }
-        }
-    } else if (command.compare("INVITE") == 0) {
-        std::string command, channel, nameOp;
-        std::istringstream iss2(buffer);
-        iss2 >> command >> nameOp >> channel;
-        bool userExists = false;
-
-        for (std::size_t i = 0; i < server->users.size(); i++) {
-            if (server->users[i].getNickname().compare(nameOp) == 0) {
-                userExists = true;
-                break;
-            }
-        }
-
-        if (!userExists) {
-            std::string message = ":" + channel + " 401 " + this->nickname + " " + nameOp + " :No such nick\r\n";
-            send_user(fd, message.c_str(), message.size(), 0);
-            return;
-        }
-
-        if (server->channels.find(channel) == server->channels.end()) {
-            std::string message = ":" + channel + " 403 " + this->nickname + " " + channel + " :No such channel\r\n";
-            send_user(fd, message.c_str(), message.size(), 0);
-            return;
-        }
-
-        if (server->channels[channel]->getInviteMode() == true) {
-            if (server->channels[channel]->users[fd].isOp == false) {
-                std::string message = ":" + channel + " 482 " + this->nickname + " " + nameOp + " " + channel + " :You're not channel operator\r\n";
-                send_user(fd, message.c_str(), message.size(), 0);
-                return;
-            }
-        }
-
-        std::size_t endPos = nameOp.find_first_of("\t\n\r ");
-        if (endPos != std::string::npos)
-            nameOp = nameOp.substr(0, endPos);
-
-        for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
-            if (server->channels[channel]->users[i].getNickname().compare(nameOp) == 0) {
-                std::string message = ":" + channel + " 443 " + this->nickname + " " + nameOp + " " + channel + " :is already on channel\r\n";
-                send_user(fd, message.c_str(), message.size(), 0);
-                return;
-            }
-        }
-
-        for (std::size_t i = 0; i < server->users.size(); i++) {
-            if (server->users[i].getNickname().compare(nameOp) == 0) {
-                std::string message = ":" + this->nickname + "!" + this->username + " INVITE " + nameOp + " " +
-                                      channel + "\r\n";
-                send_user(server->users[i].getSocket(), message.c_str(), message.size(), 0);
-                message = ":" + channel + " 341 " + this->nickname + " " + nameOp + " " + channel + "\r\n";
-                send_user(fd, message.c_str(), message.size(), 0);
-                return;
-            }
-        }
-
-        //:luna.AfterNET.Org 341 nick2 nick1 #teste
-
-    } else if (command.compare("TOPIC") == 0) {
-        std::string command, channel, topic;
-        std::istringstream iss2(buffer);
-        iss2 >> command >> channel;
-        std::getline(iss2, topic);
-        topic = topic.substr(1);
-        std::size_t endPos = topic.find_first_of("\t\n\r");
-        if (!topic.empty() && topic[0] == ':')
-            topic = topic.substr(1);
-        if (endPos != std::string::npos)
-            topic = topic.substr(0, endPos);
-        if (topic.empty() == true) {
-            if (server->channels[channel]->getTopic().empty() == true) {
-                std::string message = ":" + channel + " 331 " + this->nickname + " " + channel + " :No topic is set.\r\n";
-                send_user(fd, message.c_str(), message.size(), 0);
-                return;
-            }
-            std::string message = ":" + channel + " 332 " + this->nickname + " " + channel + " :" + server->channels[channel]->getTopic() + "\r\n";
-            send_user(fd, message.c_str(), message.size(), 0);
-            message = ":" + channel + " 333 " + this->nickname + " " + channel + " " + server->channels[channel]->getNick() + "!" + server->channels[channel]->getUser() +
-                      " 1715866598\r\n";
-            send_user(fd, message.c_str(), message.size(), 0);
-            return;
-        } else if (server->channels[channel]->getTopicMode() == true) {
-            if (server->channels[channel]->users[fd].isOp == false) {
-                std::string message =
-                        ":" + channel + " 482 " + this->nickname + " " + channel + " :You're not channel operator\r\n";
-                send_user(fd, message.c_str(), message.size(), 0);
-                return;
-            }
-        }
-        std::string message = ":" + this->nickname + "!" + this->username + " TOPIC " + channel + " :" + topic +
-                              "\r\n";
-        send_all(server, message.c_str(), message.size(), 0, channel);
-        server->channels[channel]->setTopic(topic);
-        server->channels[channel]->setNick(this->nickname);
-        server->channels[channel]->setUser(this->username);
-    }
+	if (command.compare("MODE") == 0 && !flag.empty())
+		mode(server, buf, fd);
+	if (command.compare("KICK") == 0)
+		kick(server, buf, fd);
+	if (command.compare("INVITE") == 0)
+		invite(server, buf, fd); //:luna.AfterNET.Org 341 nick2 nick1 #teste
+	if (command.compare("TOPIC") == 0) 
+		topic(server, buf, fd);
 }

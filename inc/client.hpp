@@ -31,10 +31,14 @@ class user
 		void	modeOperator(server *server, user &newOp, std::string flag, std::string channel);
 		int		modeInvite(server *server, std::string flag, std::string channel);
 		int		modeTopic(server *server, std::string flag, std::string channel);
-		void	mode(server *server, char *buffer, int fd);
-		int		modeCheck(server *server, std::string channel, int fd);
 		int		modePassword(server *server, std::string channel, std::string flag, std::string key);
 		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
+		void	mode(server *server, char *buf, int fd);
+		void	kick(server *server, char *buf, int fd);
+		void	invite(server *server, char *buf, int fd);
+		void	topic(server *server, char *buf, int fd);
+		int		opCheck(server *server, std::string channel, int fd);
+
     protected:
         int status;
 		int from_nc;

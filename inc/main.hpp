@@ -19,6 +19,8 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <map>
+#include <filesystem>
+#include <cstdio>
 #include "client.hpp"
 #include "channel.hpp"
 #include "server.hpp"
@@ -34,3 +36,6 @@ class server;
 
 ssize_t send_user(int socket, const void *buffer, size_t length, int flags);
 ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags, std::string channel);
+
+void	tmpFile();
+void	ncChannels(std::string channel, char *buf);
