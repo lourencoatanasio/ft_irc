@@ -25,8 +25,7 @@ ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags, s
 
 	for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
 	{
-		if (server->channels[channel]->users[j].getFromNc() == 0)
-			totalSentBytes += send_user(server->channels[channel]->users[j].getSocket(), buffer, lenght, flags);
+		totalSentBytes += send_user(server->channels[channel]->users[j].getSocket(), buffer, lenght, flags);
 	}
 	return (totalSentBytes);
 }
@@ -191,7 +190,7 @@ void	get_password(char *buf, int fd, server *server)
 		std::string pass = buffer.substr(buffer.find("/PASS") + 6);
 		if(check_valid(pass) == 1)
 		{
-			send_user(fd, "Please enter a valid password: /PASS <password>\n", 48, 0);
+			send_user(fd, "Please enter a valid password: /PASS <password>\r\n", 49, 0);
 			return ;
 		}
 		std::size_t endPos = pass.find_first_of("\r\n");
@@ -199,9 +198,9 @@ void	get_password(char *buf, int fd, server *server)
 			pass = pass.substr(0, endPos);
 		if (pass != server->getPass())
 		{
-			std::cout << server->getPass() << std::endl;
-			std::cout << pass << std::endl;
-			send_user(fd, "You've entered the wrong password, please try again\n", 53, 0);
+			// std::cout << server->getPass() << std::endl;
+			// std::cout << pass << std::endl;
+			send_user(fd, "You've entered the wrong password, please try again\r\n", 53, 0);
 			return ;
 		}
 		else
@@ -210,8 +209,39 @@ void	get_password(char *buf, int fd, server *server)
 			return ;
 		}
 	}
-	else if(server->users[fd].getStatus() == 0)
-		send_user(fd, "Please enter the server password: /PASS <password>\n", 52, 0);
+}
+
+
+void	get_password_hex(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+	std::cout << buffer << "\n";
+	if (buffer.find("PASS") != std::string::npos && (buffer.find("PASS") == 0 || buffer[buffer.find("PASS") - 1] == '\n'))
+	{
+		std::string pass = buffer.substr(buffer.find("PASS") + 5);
+		if(check_valid(pass) == 1)
+		{
+			send_user(fd, "Please enter a valid password: PASS <password>\r\n", 49, 0);
+			return ;
+		}
+		std::size_t endPos = pass.find_first_of("\r\n");
+		if (endPos != std::string::npos)
+			pass = pass.substr(0, endPos);
+		if (pass != server->getPass())
+		{
+			send_user(fd, "You've entered the wrong password, please try again\r\n", 53, 0);
+			return ;
+		}
+		else
+		{
+			server->users[fd].setStatus(3);
+			return ;
+		}
+	}
+	else if(buffer.find("CAP LS") != std::string::npos)
+	{
+		return ;
+	}
 }
 
 void check_channel(char *buf, int fd, server *server)
@@ -259,41 +289,6 @@ void check_channel(char *buf, int fd, server *server)
 	}
 }
 
-void	get_password_hex(char *buf, int fd, server *server)
-{
-	std::string buffer(buf);
-	if (buffer.find("PASS") != std::string::npos && (buffer.find("PASS") == 0 || buffer[buffer.find("PASS") - 1] == '\n'))
-	{
-		std::string pass = buffer.substr(buffer.find("PASS") + 5);
-		if(check_valid(pass) == 1)
-		{
-			send_user(fd, "Please enter a valid password: PASS <password>\r\n", 50	, 0);
-			return ;
-		}
-		std::size_t endPos = pass.find_first_of("\r\n");
-		if (endPos != std::string::npos)
-			pass = pass.substr(0, endPos);
-		if (pass != server->getPass())
-		{
-			std::cout << server->getPass() << std::endl;
-			std::cout << pass << std::endl;
-			send_user(fd, "You've entered the wrong password, please try again\r\n", 55, 0);
-			return ;
-		}
-		else
-		{
-			server->users[fd].setStatus(3);
-			return ;
-		}
-	}
-	else if(buffer.find("CAP LS") != std::string::npos)
-	{
-		return ;
-	}
-	else
-		send_user(fd, "Please enter the server password: /PASS <password>\r\n", 54, 0);
-}
-
 void check_priv(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
@@ -303,9 +298,9 @@ void check_priv(char *buf, int fd, server *server)
 		std::size_t channelEndPos = buffer.find(" ", buffer.find("PRIVMSG") + 8);
 		std::string channel = buffer.substr(buffer.find("PRIVMSG") + 8, channelEndPos - (buffer.find("PRIVMSG") + 8));
 
-		if (channel.at(0) == '#') {
+		if (!channel.empty() && channel.at(0) == '#') {
 			if (server->channels.find(channel) == server->channels.end()) {
-				std::string message = ":Channel does not exist\r\n";
+				std::string message = ": 403 " + nick + " " + channel + " :No such channel\r\n";
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
