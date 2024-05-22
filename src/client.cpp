@@ -16,6 +16,7 @@ user::user(int newSocket)
     }
     status = 0;
 	from_nc = 0;
+	still_building = 0;
     std::cout << "New client connected" << std::endl;
 }
 

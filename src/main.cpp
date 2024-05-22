@@ -373,6 +373,14 @@ void	sigHandler()
 	signal(SIGQUIT, SIG_IGN);
 }
 
+void	check_still_building(int fd, server *server)
+{
+	std::string buffer(server->users[fd].getBuffer());
+
+	if (buffer.find("\n") == std::string::npos)
+		server->users[fd].setStillBuilding(1);
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
@@ -391,8 +399,6 @@ int main(int argc, char **argv)
     serverPfd.fd = server->socket_id; // Use the -> operator to access members of the object pointed to by the pointer
     serverPfd.events = POLLIN;
     fds.push_back(serverPfd);
-
-    char buffer[BUFFER_SIZE];
 
     while (true) // Main server loop
     {
@@ -415,9 +421,11 @@ int main(int argc, char **argv)
 			check_source(fds[i].fd, server, ret);
 			if (fds[i].revents & POLLIN)
             {
-                std::memset(buffer, 0, BUFFER_SIZE);
+                std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE);
 
-                int bytesRead = recv(fds[i].fd, buffer, BUFFER_SIZE, 0);
+                int bytesRead = recv(fds[i].fd, server->users[fds[i].fd].getBuffer(), BUFFER_SIZE, 0);
+
+				check_still_building(fds[i].fd, server);
 
                 if (bytesRead == -1)
                 {
@@ -443,12 +451,24 @@ int main(int argc, char **argv)
 					}
                     break;
                 }
-				login(i, server, fds, buffer);
-				if(server->users[fds[i].fd].getStatus() == 4)
+				if(server->users[fds[i].fd].getStillBuilding() == 1)
 				{
-					check_channel(buffer, fds[i].fd, server);
-					check_priv(buffer, fds[i].fd, server);
-					server->users[fds[i].fd].check_operator(buffer, fds[i].fd, server);
+					server->users[fds[i].fd].setFinalBuffer(std::strcat(server->users[fds[i].fd].getFinalBuffer(), server->users[fds[i].fd].getBuffer()));
+					if(server->users[fds[i].fd].getFinalBuffer()[strlen(server->users[fds[i].fd].getFinalBuffer()) - 1] == '\n')
+					{
+						server->users[fds[i].fd].setStillBuilding(0);
+						server->users[fds[i].fd].setBuffer(server->users[fds[i].fd].getFinalBuffer());
+					}
+				}
+				if(server->users[fds[i].fd].getStillBuilding() == 0)
+				{
+					login(i, server, fds, server->users[fds[i].fd].getBuffer());
+					if (server->users[fds[i].fd].getStatus() == 4)
+					{
+						check_channel(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
+						check_priv(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
+						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
+					}
 				}
             }
         }

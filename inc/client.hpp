@@ -35,11 +35,19 @@ class user
 		int		modeCheck(server *server, std::string channel, int fd);
 		int		modePassword(server *server, std::string channel, std::string flag, std::string key);
 		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
+		void	setBuffer(char *buf)  { strcpy(buffer, buf); }
+		char	*getBuffer() { return buffer; }
+		void	setFinalBuffer(char *buf)  { strcpy(final_buffer, buf); }
+		char	*getFinalBuffer() { return final_buffer; }
+		void	setStillBuilding(int n) { still_building = n; }
+		int		getStillBuilding() { return still_building; }
     protected:
         int status;
 		int from_nc;
         int socket_id;
+		int	still_building;
         sockaddr_in IP;
+		char final_buffer[BUFFER_SIZE];
         char buffer[BUFFER_SIZE];
         int bytesRead;
         sockaddr_in client;
