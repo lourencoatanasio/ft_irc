@@ -59,6 +59,28 @@ int	check_valid(std::string buffer)
 	return (0);
 }
 
+int check_same_user(std::string username, server *server)
+{
+	std::map<int, user>::iterator it;
+	for (it = server->users.begin(); it != server->users.end(); ++it)
+	{
+		if (it->second.getUsername() == username)
+			return (1);
+	}
+	return (0);
+}
+
+int check_same_nick(std::string nick, server *server)
+{
+	std::map<int, user>::iterator it;
+	for (it = server->users.begin(); it != server->users.end(); ++it)
+	{
+		if (it->second.getNickname() == nick)
+			return (1);
+	}
+	return (0);
+}
+
 void    get_username(char *buf, int fd, server *server)
 {
     std::string buffer(buf);
@@ -80,6 +102,11 @@ void    get_username(char *buf, int fd, server *server)
             if (endPos != std::string::npos)
                 username = username.substr(0, endPos);
 			username = username.substr(0, username.find(" "));
+			if(check_same_user(username, server) == 1)
+			{
+				send_user(fd, "Username already taken, please try again\n", 42, 0);
+				return ;
+			}
             server->users[fd].setUsername(username);
             std::cout << "Username set to: |" << username << "|\n";
             server->users[fd].setStatus(2);
@@ -171,6 +198,11 @@ void    get_nickname(char *buf, int fd, server *server)
         if (endPos != std::string::npos)
             nick = nick.substr(0, endPos);
 		nick = nick.substr(0, nick.find(" "));
+		if(check_same_nick(nick, server) == 1)
+		{
+			send_user(fd, "Nickname already taken, please try again\n", 42, 0);
+			return ;
+		}
         if (oldNick.compare(nick) == 0)
             return ;
         if (!server->users[fd].getNickname().empty())
@@ -378,7 +410,11 @@ void	check_still_building(int fd, server *server)
 	std::string buffer(server->users[fd].getBuffer());
 
 	if (buffer.find("\n") == std::string::npos)
+	{
+		std::cout << "still building\n";
 		server->users[fd].setStillBuilding(1);
+	}
+
 }
 
 int main(int argc, char **argv)
@@ -402,7 +438,7 @@ int main(int argc, char **argv)
 
     while (true) // Main server loop
     {
-		sigHandler();
+//		sigHandler();
         int ret = poll(fds.data(), fds.size(), 100);
 
 		if (ret == -1)
@@ -423,9 +459,13 @@ int main(int argc, char **argv)
             {
                 std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE);
 
+				std::cout << "fds[i].fd = " << fds[i].fd << "\n";
+
                 int bytesRead = recv(fds[i].fd, server->users[fds[i].fd].getBuffer(), BUFFER_SIZE, 0);
 
 				check_still_building(fds[i].fd, server);
+
+				std::cout << "bytesRead = " << bytesRead << "\n";
 
                 if (bytesRead == -1)
                 {
