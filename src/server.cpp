@@ -4,8 +4,26 @@
 
 #include "../inc/server.hpp"
 
-server::server(char *password)
+int check_valid_port(char *port)
 {
+	int i = 0;
+	while (port[i])
+	{
+		if (!isdigit(port[i]))
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+server::server(char *password, char *port)
+{
+	if(check_valid_port(port))
+	{
+		std::cerr << "Invalid port\n";
+		exit(EXIT_FAILURE);
+	}
+	int PORT = atoi(port);
     this->password = std::string(password);
     this->server_ip = "127.0.0.2";
     this->socket_id = socket(AF_INET, SOCK_STREAM, 0);

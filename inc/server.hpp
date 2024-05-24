@@ -8,7 +8,6 @@
 #include "client.hpp"
 #include "channel.hpp"
 
-#define PORT 54000 // to be changed to receive as argument
 #define BUFFER_SIZE 4096
 
 class channel;
@@ -17,7 +16,7 @@ class user;
 class server
 {
     public:
-        server(char *password);
+        server(char *password, char *port);
         ~server();
         void connect(); // Not sure if this is needed
         void send(); // Not sure if this is needed

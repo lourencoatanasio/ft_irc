@@ -102,14 +102,9 @@ void    get_username(char *buf, int fd, server *server)
             if (endPos != std::string::npos)
                 username = username.substr(0, endPos);
 			username = username.substr(0, username.find(" "));
-			if(check_same_user(username, server) == 1)
-			{
-				send_user(fd, "Username already taken, please try again\n", 42, 0);
-				return ;
-			}
             server->users[fd].setUsername(username);
             std::cout << "Username set to: |" << username << "|\n";
-            server->users[fd].setStatus(2);
+            server->users[fd].setStatus(3);
             std::cout << "status = " << server->users[fd].getStatus() << "\n";
         }
         else
@@ -158,7 +153,11 @@ void    get_nickname_hex(char *buf, int fd, server *server)
 			nick = nick.substr(0, endPos);
 		// cut by the first space
 		nick = nick.substr(0, nick.find(" "));
-
+		if (check_same_nick(nick, server) == 1)
+		{
+			send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 70, 0);
+			return ;
+		}
 		if (oldNick.compare(nick) == 0)
 			return ;
 		if (!server->users[fd].getNickname().empty())
@@ -215,7 +214,7 @@ void    get_nickname(char *buf, int fd, server *server)
             server->users[fd].setNickname(nick);
         std::cout << "status = " << server->users[fd].getStatus() << "\n";
         std::cout << "Nickname set to: |" << nick << "|\n";
-        server->users[fd].setStatus(3);
+        server->users[fd].setStatus(2);
     }
     else if(server->users[fd].getNickname().empty())
         send_user(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
@@ -388,9 +387,9 @@ void    login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 		if (server->users[fds[i].fd].getStatus() == 0)
 			get_password(buffer, fds[i].fd, server);
 		if (server->users[fds[i].fd].getStatus() == 1)
-			get_username(buffer, fds[i].fd, server);
-		if (server->users[fds[i].fd].getStatus() == 2)
 			get_nickname(buffer, fds[i].fd, server);
+		if (server->users[fds[i].fd].getStatus() == 2)
+			get_username(buffer, fds[i].fd, server);;
 	}
 	if(server->users[fds[i].fd].getStatus() == 3)
 	{
@@ -414,19 +413,58 @@ void	check_still_building(int fd, server *server)
 		std::cout << "still building\n";
 		server->users[fd].setStillBuilding(1);
 	}
+}
 
+void	change_nick(char *buf, int fd, server *server)
+{
+	std::string buffer(buf);
+
+	if(buffer.find("NICK") != std::string::npos && ((buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n')))
+	{
+		std::string oldNick = server->users[fd].getNickname();
+		std::string nick = buffer.substr(buffer.find("NICK") + 5);
+		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
+			nick = nick.substr(0, nick.size() - 1);
+		std::size_t endPos = nick.find_first_of("\r\n");
+		if (endPos != std::string::npos)
+			nick = nick.substr(0, endPos);
+		nick = nick.substr(0, nick.find(" "));
+		if (check_same_nick(nick, server) == 1)
+		{
+			if(server->users[fd].getFromNc() == 0)
+				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 69, 0);
+			else
+				send_user(fd, "Nickname already taken, please try again\n", 42, 0);
+			return;
+		}
+		if (oldNick.compare(nick) == 0)
+			return;
+		if (!server->users[fd].getNickname().empty() && server->users[fd].getFromNc() == 0)
+		{
+			server->users[fd].setNickname(nick);
+			std::string message =
+					":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() +
+					"\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+		}
+		else
+		{
+			server->users[fd].setNickname(nick);
+			send_user(fd, "NICK changed successfully\r\n", 29, 0);
+		}
+		std::cout << "status = " << server->users[fd].getStatus() << "\n";
+		std::cout << "Nickname set to: |" << nick << "|\n";
+	}
 }
 
 int main(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
     if(argc != 3)
     {
         std::cout << "Error: Proper use is <./ft_irc <port> <password>\n";
         return (1);
     }
-    server serverT(argv[2]); // Create a server object
+    server serverT(argv[2], argv[1]); // Create a server object
     server *server = &serverT; // Create a pointer to the server object
 
     std::vector<pollfd> fds;
@@ -505,6 +543,7 @@ int main(int argc, char **argv)
 					login(i, server, fds, server->users[fds[i].fd].getBuffer());
 					if (server->users[fds[i].fd].getStatus() == 4)
 					{
+						change_nick(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						check_channel(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						check_priv(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
