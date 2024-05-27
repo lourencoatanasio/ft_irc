@@ -8,7 +8,7 @@
 #include "client.hpp"
 #include "channel.hpp"
 
-#define PORT 54000 // to be changed to receive as argument
+#define PORT 10000 // to be changed to receive as argument
 #define BUFFER_SIZE 4096
 
 class channel;

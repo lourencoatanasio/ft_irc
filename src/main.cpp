@@ -244,6 +244,27 @@ void	get_password_hex(char *buf, int fd, server *server)
 	}
 }
 
+void	channel_send(server *server, std::string nick, std::string username, std::string channelName, int fd)
+{
+	std::vector<std::string> v;
+	v.push_back(":" + nick + "!" + username + " JOIN " + channelName + "\r\n");
+	v.push_back(": 353 " + nick + " = " + channelName + " :");
+	for (size_t i = 0; i < server->channels[channelName]->users.size(); i++)
+	{
+		if (server->channels[channelName]->users[i].getOpStatus() == true)
+			v[1] += "@";
+		v[1] += server->channels[channelName]->users[i].getNickname() + " ";
+	}
+	v[1] += "\r\n";
+	v.push_back(": 366 " + nick + " " + channelName + " :End of /NAMES list.\r\n");
+	v.push_back(": 324 " + nick + " " + channelName + " +tn\r\n");
+	v.push_back(": 354 " + nick + " 152 " + channelName + " " + username + " ft_irc " + nick + "\r\n");
+	v.push_back(": 315 " + nick + " " + channelName + " :End of /WHO list.\r\n");
+	send_all(server, v[0].c_str(), v[0].size(), 0, channelName);
+	for (size_t i = 1; i < v.size(); i++)
+		send_user(fd, v[i].c_str(), v[i].size(), 0);
+}
+
 void check_channel(char *buf, int fd, server *server)
 {
 	std::string buffer(buf), message;
@@ -276,9 +297,7 @@ void check_channel(char *buf, int fd, server *server)
 		}
 		else
 			server->channels[channelName]->users[fd] = server->users[fd];
-		//:nick1!user2@F456A.75198A.60D2B2.ADA236.IP JOIN #teste * :realname
-		std::string message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
-		send_all(server, message.c_str(), message.size(), 0, channelName);
+		channel_send(server, nick, username, channelName, fd);
 		if (server->channels[channelName]->getTopic().empty() == false) {
 			std::string message = ":" + channelName + " 332 " + nick + " " + channelName + " :" + server->channels[channelName]->getTopic() + "\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
