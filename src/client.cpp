@@ -281,3 +281,50 @@ void	user::check_operator(char *buf, int fd, server *server) {
 	if (command.compare("TOPIC") == 0) 
 		topic(server, buf, fd);
 }
+
+void	user::change_nick(char *buf, int fd, server *server)
+{
+	std::string buffer(buf), cmd, nick, message;
+	std::istringstream iss(buffer);
+	iss >> cmd >> nick;
+	if (cmd.compare("NICK") == 0)
+	{
+		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
+			nick = nick.substr(0, nick.size() - 1);
+		std::size_t endPos = nick.find_first_of("\r\n");
+		if (endPos != std::string::npos)
+			nick = nick.substr(0, endPos);
+		nick = nick.substr(0, nick.find(" "));
+		if (check_same_nick(nick, server) == 1 && this->nickname != nick)
+		{
+			if(from_nc == 0)
+				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 69, 0);
+			else
+				send_user(fd, "Nickname already taken, please try again\n", 42, 0);
+			return;
+		}
+		if (!this->nickname.empty() && from_nc == 0)
+		{
+			message = ":" + this->nickname + "!" + this->username + " NICK :" + nick + "\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			message.clear();
+		}
+		else
+			send_user(fd, "NICK changed successfully\r\n", 29, 0);
+		for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); it++)
+		{
+			for (std::map<int, user>::iterator it2 = it->second->users.begin(); it2 != it->second->users.end(); it2++)
+			{
+				if (this->nickname == it2->second.getNickname())
+				{
+					message = ":" + this->nickname + "!" + this->username + " NICK :" + nick + "\r\n";
+					send_all(server, message.c_str(), message.size(), 0, it->first);
+					it2->second.setNickname(nick);
+				}
+			}
+		}
+		this->setNickname(nick);
+		std::cout << "status = " << status << "\n";
+		std::cout << "Nickname set to: |" << nick << "|\n";
+	}
+}

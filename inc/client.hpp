@@ -44,6 +44,7 @@ class user
 		void	invite(server *server, char *buf, int fd);
 		void	topic(server *server, char *buf, int fd);
 		int		opCheck(server *server, std::string channel, int fd);
+		void	change_nick(char *buf, int fd, server *server);
 
     protected:
         int status;

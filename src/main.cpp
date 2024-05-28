@@ -143,12 +143,11 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 	{
 		std::string oldNick = server->users[fd].getNickname();
 		std::string nick = buffer.substr(buffer.find("NICK") + 5);
-		while(nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
+		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
 			nick = nick.substr(0, nick.size() - 1);
 		std::size_t endPos = nick.find_first_of("\r\n");
 		if (endPos != std::string::npos)
 			nick = nick.substr(0, endPos);
-		// cut by the first space
 		nick = nick.substr(0, nick.find(" "));
 		if (check_same_nick(nick, server) == 1)
 		{
@@ -295,15 +294,19 @@ void	channel_send(server *server, std::string nick, std::string username, std::s
 	v.push_back(": 324 " + nick + " " + channelName + " +tn\r\n");
 	v.push_back(": 354 " + nick + " 152 " + channelName + " " + username + " ft_irc " + nick + "\r\n");
 	v.push_back(": 315 " + nick + " " + channelName + " :End of /WHO list.\r\n");
-	send_all(server, v[0].c_str(), v[0].size(), 0, channelName);
+	
 	for (size_t i = 1; i < v.size(); i++)
+	{
 		send_user(fd, v[i].c_str(), v[i].size(), 0);
+	}
 }
 
 void check_channel(char *buf, int fd, server *server)
 {
-	std::string buffer(buf), message;
-	if (buffer.find("JOIN") != std::string::npos && (buffer.find("JOIN") == 0 || buffer[buffer.find("JOIN") - 1] == '\n')) {
+	std::string buffer(buf), message, cmd;
+	std::istringstream iss(buffer);
+	iss >> cmd;
+	if (cmd.compare("JOIN") == 0) {
 		std::string username = server->users[fd].getUsername();
 		std::string nick = server->users[fd].getNickname();
 		std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
@@ -332,6 +335,8 @@ void check_channel(char *buf, int fd, server *server)
 		}
 		else
 			server->channels[channelName]->users[fd] = server->users[fd];
+		message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
+		send_all(server, message.c_str(), message.size(), 0, channelName);
 		channel_send(server, nick, username, channelName, fd);
 		if (server->channels[channelName]->getTopic().empty() == false) {
 			std::string message = ":" + channelName + " 332 " + nick + " " + channelName + " :" + server->channels[channelName]->getTopic() + "\r\n";
@@ -442,48 +447,6 @@ void	check_still_building(int fd, server *server)
 	}
 }
 
-void	change_nick(char *buf, int fd, server *server)
-{
-	std::string buffer(buf);
-
-	if(buffer.find("NICK") != std::string::npos && ((buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n')))
-	{
-		std::string oldNick = server->users[fd].getNickname();
-		std::string nick = buffer.substr(buffer.find("NICK") + 5);
-		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
-			nick = nick.substr(0, nick.size() - 1);
-		std::size_t endPos = nick.find_first_of("\r\n");
-		if (endPos != std::string::npos)
-			nick = nick.substr(0, endPos);
-		nick = nick.substr(0, nick.find(" "));
-		if (check_same_nick(nick, server) == 1)
-		{
-			if(server->users[fd].getFromNc() == 0)
-				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 69, 0);
-			else
-				send_user(fd, "Nickname already taken, please try again\n", 42, 0);
-			return;
-		}
-		if (oldNick.compare(nick) == 0)
-			return;
-		if (!server->users[fd].getNickname().empty() && server->users[fd].getFromNc() == 0)
-		{
-			server->users[fd].setNickname(nick);
-			std::string message =
-					":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() +
-					"\r\n";
-			send_user(fd, message.c_str(), message.size(), 0);
-		}
-		else
-		{
-			server->users[fd].setNickname(nick);
-			send_user(fd, "NICK changed successfully\r\n", 29, 0);
-		}
-		std::cout << "status = " << server->users[fd].getStatus() << "\n";
-		std::cout << "Nickname set to: |" << nick << "|\n";
-	}
-}
-
 int main(int argc, char **argv)
 {
     if(argc != 3)
@@ -505,7 +468,6 @@ int main(int argc, char **argv)
     {
 		// sigHandler();
         int ret = poll(fds.data(), fds.size(), 100);
-		char buffer[BUFFER_SIZE];
 
 		if (ret == -1)
 		{
@@ -558,9 +520,6 @@ int main(int argc, char **argv)
                     break;
                 }
 				if(server->users[fds[i].fd].getStillBuilding() == 1)
-					break;
-				login(i, server, fds, buffer);
-				if(server->users[fds[i].fd].getStatus() == 4)
 				{
 					server->users[fds[i].fd].setFinalBuffer(std::strcat(server->users[fds[i].fd].getFinalBuffer(), server->users[fds[i].fd].getBuffer()));
 					if(server->users[fds[i].fd].getFinalBuffer()[strlen(server->users[fds[i].fd].getFinalBuffer()) - 1] == '\n')
@@ -574,7 +533,7 @@ int main(int argc, char **argv)
 					login(i, server, fds, server->users[fds[i].fd].getBuffer());
 					if (server->users[fds[i].fd].getStatus() == 4)
 					{
-						change_nick(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
+						server->users[fds[i].fd].change_nick(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						check_channel(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						check_priv(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
