@@ -22,6 +22,12 @@ class channel {
 		void		setInviteMode(bool status){inviteMode = status;}
 		void		setPassword(std::string pass){passwd = pass;}
 		void		setmaxUsers(int n){maxUsers = n;}
+        std::string	getTopic(void){return(topic);}
+        std::string	getUser(void){return(user);}
+        std::string	getNick(void){return(nick);}
+        void		setTopic(std::string top){topic = top;}
+        void        setUser(std::string us){user = us;}
+        void        setNick(std::string ni){nick = ni;}
 		std::map<int, user> users;
 
 	private:
@@ -29,4 +35,7 @@ class channel {
 		bool		inviteMode;
 		int			maxUsers;
 		std::string	passwd;
+        std::string topic;
+        std::string user;
+        std::string nick;
 };
