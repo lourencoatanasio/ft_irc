@@ -49,7 +49,6 @@ class user
 		void	change_nick(char *buf, int fd, server *server);
         int     check_same_nick(std::string nick, server *server);
         int flag;
-
     protected:
         int status;
 		int from_nc;
