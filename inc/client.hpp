@@ -17,10 +17,12 @@ class user
         ~user();
         int clientSocket;
         std::string getNickname() { return nickname; }
+        std::string getOldNick() { return oldNick; }
         std::string getUsername() { return username; }
         int getOpStatus() { return isOp; }
         int getSocket() { return clientSocket; }
         void setNickname(std::string newNickname) { nickname = newNickname; }
+        void setOldNick(std::string newOldNick) { oldNick = newOldNick; }
         void setUsername(std::string newUsername) { username = newUsername; }
         void setStatus(int newStatus) { status = newStatus; }
         int getStatus() { return status; }
@@ -45,6 +47,8 @@ class user
 		void	topic(server *server, char *buf, int fd);
 		int		opCheck(server *server, std::string channel, int fd);
 		void	change_nick(char *buf, int fd, server *server);
+        int     check_same_nick(std::string nick, server *server);
+        int flag;
 
     protected:
         int status;
@@ -58,6 +62,7 @@ class user
         sockaddr_in client;
         socklen_t clientSize;
         std::string nickname;
+        std::string oldNick;
         std::string username;
 		bool	isOp;
 };

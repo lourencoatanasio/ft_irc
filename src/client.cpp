@@ -289,21 +289,22 @@ void	user::change_nick(char *buf, int fd, server *server)
 	iss >> cmd >> nick;
 	if (cmd.compare("NICK") == 0)
 	{
+        std::cout << "BAZAAAA" << std::endl;
 		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
 			nick = nick.substr(0, nick.size() - 1);
 		std::size_t endPos = nick.find_first_of("\r\n");
 		if (endPos != std::string::npos)
 			nick = nick.substr(0, endPos);
 		nick = nick.substr(0, nick.find(" "));
-		if (check_same_nick(nick, server) == 1 && this->nickname != nick)
+		if (this->check_same_nick(nick, server) == 1 && this->nickname != nick)
 		{
 			if(from_nc == 0)
 				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 69, 0);
 			else
-				send_user(fd, "Nickname already taken, please try again\n", 42, 0);
+				send_user(fd, "Nickname already taken, please try again\n", 41, 0);
 			return;
 		}
-		if (!this->nickname.empty() && from_nc == 0)
+		if (!this->nickname.empty())
 		{
 			message = ":" + this->nickname + "!" + this->username + " NICK :" + nick + "\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
@@ -327,4 +328,15 @@ void	user::change_nick(char *buf, int fd, server *server)
 		std::cout << "status = " << status << "\n";
 		std::cout << "Nickname set to: |" << nick << "|\n";
 	}
+}
+
+int user::check_same_nick(std::string nick, server *server)
+{
+    std::map<int, user>::iterator it;
+    for (it = server->users.begin(); it != server->users.end(); ++it)
+    {
+        if (it->second.getNickname() == nick && this->getNickname() != it->second.getNickname())
+            return (1);
+    }
+    return (0);
 }
