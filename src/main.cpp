@@ -416,12 +416,6 @@ void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 	}
 }
 
-void	sigHandler()
-{
-	signal(SIGINT, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-}
-
 void	check_still_building(int fd, server *server)
 {
 	std::string buffer(server->users[fd].getBuffer());
@@ -431,6 +425,18 @@ void	check_still_building(int fd, server *server)
 		std::cout << "still building\n";
 		server->users[fd].setStillBuilding(1);
 	}
+}
+
+void	print_null(char *buf)
+{
+	for (size_t i = 0; i < strlen(buf); i++)
+	{
+		if (buf[i] == '\0')
+			std::cout << "NULL";
+		else
+			std::cout << buf[i];
+	}
+	std::cout << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -452,7 +458,7 @@ int main(int argc, char **argv)
 
     while (true) // Main server loop
     {
-		// sigHandler();
+		sigHandler();
         int ret = poll(fds.data(), fds.size(), 100);
 
 		if (ret == -1)
@@ -473,14 +479,9 @@ int main(int argc, char **argv)
             {
                 std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE);
 
-				std::cout << "fds[i].fd = " << fds[i].fd << "\n";
-
                 int bytesRead = recv(fds[i].fd, server->users[fds[i].fd].getBuffer(), BUFFER_SIZE, 0);
 
 				check_still_building(fds[i].fd, server);
-
-				std::cout << "bytesRead = " << bytesRead << "\n";
-
 				if (bytesRead == -1)
 				{
 					std::cerr << "Error in recv(). Quitting" << std::endl;
@@ -512,6 +513,7 @@ int main(int argc, char **argv)
 					{
 						server->users[fds[i].fd].setStillBuilding(0);
 						server->users[fds[i].fd].setBuffer(server->users[fds[i].fd].getFinalBuffer());
+						std::memset(server->users[fds[i].fd].getFinalBuffer(), 0, BUFFER_SIZE);
 					}
 				}
 				if(server->users[fds[i].fd].getStillBuilding() == 0)
@@ -525,6 +527,7 @@ int main(int argc, char **argv)
 						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 					}
 				}
+				std::cout << "Buffer: " << server->users[fds[i].fd].getBuffer() << std::endl;
 			}
 		}
 	}

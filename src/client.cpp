@@ -17,6 +17,8 @@ user::user(int newSocket)
     status = 0;
 	from_nc = 0;
 	still_building = 0;
+	buffer[0] = '\0';
+	final_buffer[0] = '\0';
     std::cout << "New client connected" << std::endl;
 }
 
@@ -339,4 +341,12 @@ int user::check_same_nick(std::string nick, server *server)
             return (1);
     }
     return (0);
+}
+
+void	user::setFinalBuffer(char *buf)
+{
+	char tmp[BUFFER_SIZE];
+
+	std::strcpy(tmp, buf);
+	std::strcpy(final_buffer, tmp);
 }
