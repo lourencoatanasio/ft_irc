@@ -1,5 +1,7 @@
 #include "../inc/main.hpp"
 
+extern bool turn_off;
+
 ssize_t	send_user(int socket, const void *buffer, size_t length, int flags)
 {
 	ssize_t totalSentBytes = 0;
@@ -459,7 +461,14 @@ int main(int argc, char **argv)
     while (true) // Main server loop
     {
 		sigHandler();
+
         int ret = poll(fds.data(), fds.size(), 100);
+
+		if (turn_off)
+		{
+			std::cout << "Server shutting down" << std::endl;
+			break;
+		}
 
 		if (ret == -1)
 		{
