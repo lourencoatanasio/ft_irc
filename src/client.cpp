@@ -303,6 +303,9 @@ void	user::change_nick(char *buf, int fd, server *server)
 				send_user(fd, "Nickname already taken, please try again\n", 41, 0);
 			return;
 		}
+		else if (this->nickname == nick){
+			return ;
+		}
 		for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); it++)
 		{
 			for (std::map<int, user>::iterator it2 = it->second->users.begin(); it2 != it->second->users.end(); it2++)
@@ -333,38 +336,3 @@ int user::check_same_nick(std::string nick, server *server)
     }
     return (0);
 }
-
-/* std::string	user::bufCheck(char *buf)
-{
-	std::string	buf1(buf), buf2(buf), buf3(buf);
-
-	std::cout << buf1;
-	std::cout << buf1.find("CAP LS 302") << "\n";
-	if (buf1.find("CAP LS 302") != 0)
-		return (NULL);
-	buf1.erase(buf1.find("NICK"), buf1.size());
-	buf2.erase(0, buf2.find("NICK"));
-	if (buf2.find("USER") == std::string::npos)
-	{
-		buf2.erase(buf2.find("NICK"), 4);
-		size_t pos = buf2.find_first_not_of(' ');
-		buf2.erase(0, pos - 1);
-		std::string m = ":" + buf2 + "!" + this->username + " NICK :" + buf2 + "\r\n";
-		std::cout << YELLOW << m << NC << "\n";
-		send_user(this->getSocket(), m.c_str(), m.size(), 0);
-		return (buf2);
-	}
-	buf2.erase(buf2.find("USER"), buf2.size());
-	buf3.erase(0, buf3.find("USER"));
-	
-	size_t pos = buf2.find_first_not_of(' ', 5);
-	buf2.erase(5, pos - 5);
-
-	std::cout << RED << buf1 << NC << "\n";
-	std::cout << YELLOW << buf2 << NC << "\n";
-	std::cout << GREEN << buf3 << NC << "\n";
-	std::string final = buf1 + buf2 + buf3;
-	std::cout << BLUE << final << '\n' << NC;
-	send_user(this->getSocket(), final.c_str(), final.size(), 0);
-	return (final);
-} */
