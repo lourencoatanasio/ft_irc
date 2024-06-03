@@ -19,6 +19,7 @@ user::user(int newSocket)
 	still_building = 0;
 	buffer[0] = '\0';
 	final_buffer[0] = '\0';
+	flag = 0;
     std::cout << "New client connected" << std::endl;
 }
 

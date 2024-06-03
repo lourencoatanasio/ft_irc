@@ -11,7 +11,7 @@ OBJ_DIR =	obj
 OBJS    =	$(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.cpp=.o)))
 
 CC			=	c++
-CFLAGS	=	-Wall -Wextra -Werror -I./inc -std=c++98
+CFLAGS	=	-Wall -Wextra -Werror -g -I./inc -std=c++98
 RM			= rm -rf
 
 all:			$(NAME)
