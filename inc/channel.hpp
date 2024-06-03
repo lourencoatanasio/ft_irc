@@ -23,10 +23,10 @@ class channel {
 		void		setPassword(std::string pass){passwd = pass;}
 		void		setmaxUsers(int n){maxUsers = n;}
         std::string	getTopic(void){return(topic);}
-        std::string	getUser(void){return(user);}
+        std::string	getUser(void){return(username);}
         std::string	getNick(void){return(nick);}
         void		setTopic(std::string top){topic = top;}
-        void        setUser(std::string us){user = us;}
+        void        setUser(std::string us){username = us;}
         void        setNick(std::string ni){nick = ni;}
 		std::map<int, user> users;
 
@@ -36,6 +36,6 @@ class channel {
 		int			maxUsers;
 		std::string	passwd;
         std::string topic;
-        std::string user;
+        std::string username;
         std::string nick;
 };

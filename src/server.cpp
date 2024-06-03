@@ -25,7 +25,7 @@ server::server(char *password, char *port)
 	}
 	int PORT = atoi(port);
     this->password = std::string(password);
-    this->server_ip = "127.0.0.2";
+    this->server_ip = "127.0.0.1";
     this->socket_id = socket(AF_INET, SOCK_STREAM, 0);
     int optval = 1;
     if (setsockopt(socket_id, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0)

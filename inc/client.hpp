@@ -37,7 +37,7 @@ class user
 		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
 		void	setBuffer(const char *buf)  { strcpy(buffer, buf); }
 		char	*getBuffer() { return buffer; }
-		void	setFinalBuffer(char *buf)  { strcpy(final_buffer, buf); }
+		void	setFinalBuffer(char *buf);
 		char	*getFinalBuffer() { return final_buffer; }
 		void	setStillBuilding(int n) { still_building = n; }
 		int		getStillBuilding() { return still_building; }
@@ -49,7 +49,6 @@ class user
 		void	change_nick(char *buf, int fd, server *server);
         int     check_same_nick(std::string nick, server *server);
         int flag;
-
     protected:
         int status;
 		int from_nc;

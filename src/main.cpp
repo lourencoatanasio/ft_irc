@@ -1,5 +1,7 @@
 #include "../inc/main.hpp"
 
+extern bool turn_off;
+
 ssize_t	send_user(int socket, const void *buffer, size_t length, int flags)
 {
 	ssize_t totalSentBytes = 0;
@@ -43,6 +45,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	pollfd newPfd;
 	newPfd.fd = newClientSocket;
 	newPfd.events = POLLIN;
+	newPfd.revents = 0;
 	fds.push_back(newPfd);
 	fds[0].revents = 0;
 	send_user(newPfd.fd, "Welcome to the server!\n", 23, 0);
@@ -59,14 +62,18 @@ int	check_valid(std::string buffer)
 	return (0);
 }
 
-/*
+
 void	get_username(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-	if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n'))
+	std::istringstream iss(buffer);
+	std::string cmd;
+	std::string username;
+	iss >> cmd >> username;
+	if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n') && cmd.compare("USER") == 0)
 	{
-		if (server->users[fd].getUsername().empty()) {
-			std::string username = buffer.substr(buffer.find("USER") + 5);
+		if (server->users[fd].getUsername().empty())
+		{
 			if(check_valid(username) == 1)
 			{
 				send_user(fd, "Please enter a valid username: USER <username>\n", 47, 0);
@@ -91,7 +98,7 @@ void	get_username(char *buf, int fd, server *server)
     else if(server->users[fd].getUsername().empty())
         send_user(fd, "Please enter your username: USER <username>\n", 45, 0);
 }
-*/
+
 
 void	get_username_hex(char *buf, int fd, server *server)
 {
@@ -128,9 +135,9 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		nick.erase(nick.find_first_of("\n\r\t "), nick.size() - 1);
         if (server->users[fd].getOldNick().empty())
             server->users[fd].setOldNick(nick);
-		if (server->users[fd].check_same_nick(nick, server) == 1)
+		if(server->users[fd].check_same_nick(nick, server) == 1)
 		{
-            server->users[fd].flag = 1;
+			server->users[fd].flag = 1;
 			send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 68, 0);
 			return ;
 		}
@@ -144,17 +151,20 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		std::cout << "Nickname set to: |" << nick << "|\n";
 		server->users[fd].setStatus(2);
 	}
-	/*else if(server->users[fd].getNickname().empty())
-		send_user(fd, "Please enter your nickname: NICK <nickname>\r\n", 45, 0);*/
+	else if(server->users[fd].getNickname().empty())
+		send_user(fd, "Please enter your nickname: NICK <nickname>\r\n", 45, 0);
 }
 
-/*void	get_nickname(char *buf, int fd, server *server)
+void	get_nickname(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
+	std::istringstream iss(buffer);
+	std::string cmd;
+	std::string nick;
+	iss >> cmd >> nick;
+	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n') && cmd.compare("NICK") == 0)
 	{
 		std::string oldNick = server->users[fd].getNickname();
-		std::string nick = buffer.substr(buffer.find("NICK") + 5);
 		if(check_valid(nick) == 1)
 		{
 			send_user(fd, "Please enter a valid nickname: NICK <nickname>\n", 47, 0);
@@ -168,7 +178,7 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		if (endPos != std::string::npos)
 			nick = nick.substr(0, endPos);
 		nick = nick.substr(0, nick.find(" "));
-		if(check_same_nick(nick, server) == 1)
+		if(server->users[fd].check_same_nick(nick, server) == 1)
 		{
 			send_user(fd, "Nickname already taken, please try again\n", 42, 0);
 			return ;
@@ -176,23 +186,23 @@ void	get_nickname_hex(char *buf, int fd, server *server)
         if (oldNick.compare(nick) == 0)
             return ;
         server->users[fd].setNickname(nick);
-        std::string message = ":" + oldNick + "!" + server->users[fd].getUsername() + " NICK " + server->users[fd].getNickname() + "\r\n";
-        send_user(fd, message.c_str(), message.size(), 0);
         std::cout << "status = " << server->users[fd].getStatus() << "\n";
         std::cout << "Nickname set to: |" << nick << "|\n";
         server->users[fd].setStatus(2);
     }
     else if(server->users[fd].getNickname().empty())
         send_user(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
-}*/
+}
 
-/*
 void    get_password(char *buf, int fd, server *server)
 {
-    std::string buffer(buf);
+	std::string buffer(buf);
+	std::istringstream iss(buffer);
+	std::string cmd;
+	std::string pass;
+	iss >> cmd >> pass;
     if (buffer.find("/PASS") != std::string::npos && (buffer.find("/PASS") == 0 || buffer[buffer.find("/PASS") - 1] == '\n'))
     {
-        std::string pass = buffer.substr(buffer.find("/PASS") + 6);
 		if(check_valid(pass) == 1)
 		{
 			send_user(fd, "Please enter a valid password: /PASS <password>\n", 48, 0);
@@ -217,7 +227,6 @@ void    get_password(char *buf, int fd, server *server)
     else if(server->users[fd].getStatus() == 0)
         send_user(fd, "Please enter the server password: /PASS <password>\n", 52, 0);
 }
-*/
 
 void	get_password_hex(char *buf, int fd, server *server)
 {
@@ -378,7 +387,7 @@ void	check_source(int fd, server *server, int ret)
 
 void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 {
-    if (server->users[fds[i].fd].getStatus() < 3) {
+    if (server->users[fds[i].fd].getStatus() < 3 && server->users[fds[i].fd].getFromNc() == 0) {
         if (server->users[fds[i].fd].getStatus() == 0)
             get_username_hex(buffer, fds[i].fd, server);
         if (server->users[fds[i].fd].getStatus() == 1)
@@ -386,7 +395,7 @@ void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
         if (server->users[fds[i].fd].getStatus() == 2)
             get_password_hex(buffer, fds[i].fd, server);
     }
-	/*else if (server->users[fds[i].fd].getFromNc() == 1 && server->users[fds[i].fd].getStatus() < 3)
+	else if (server->users[fds[i].fd].getFromNc() == 1 && server->users[fds[i].fd].getStatus() < 3)
 	{
 		if (server->users[fds[i].fd].getStatus() == 0)
 			get_password(buffer, fds[i].fd, server);
@@ -394,18 +403,12 @@ void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 			get_nickname(buffer, fds[i].fd, server);
 		if (server->users[fds[i].fd].getStatus() == 2)
 			get_username(buffer, fds[i].fd, server);;
-	}*/
+	}
 	if(server->users[fds[i].fd].getStatus() == 3)
 	{
 		send_user(fds[i].fd, "Congratulations, you are now connected to the server!\r\n", 55, 0);
 		server->users[fds[i].fd].setStatus(4);
 	}
-}
-
-void	sigHandler()
-{
-	signal(SIGINT, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
 }
 
 void	check_still_building(int fd, server *server)
@@ -417,6 +420,18 @@ void	check_still_building(int fd, server *server)
 		std::cout << "still building\n";
 		server->users[fd].setStillBuilding(1);
 	}
+}
+
+void	print_null(char *buf)
+{
+	for (size_t i = 0; i < strlen(buf); i++)
+	{
+		if (buf[i] == '\0')
+			std::cout << "NULL";
+		else
+			std::cout << buf[i];
+	}
+	std::cout << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -438,8 +453,15 @@ int main(int argc, char **argv)
 
     while (true) // Main server loop
     {
-		// sigHandler();
+		sigHandler();
+
         int ret = poll(fds.data(), fds.size(), 100);
+
+		if (turn_off)
+		{
+			std::cout << "Server shutting down" << std::endl;
+			break;
+		}
 
 		if (ret == -1)
 		{
@@ -491,6 +513,7 @@ int main(int argc, char **argv)
 					{
 						server->users[fds[i].fd].setStillBuilding(0);
 						server->users[fds[i].fd].setBuffer(server->users[fds[i].fd].getFinalBuffer());
+						std::memset(server->users[fds[i].fd].getFinalBuffer(), 0, BUFFER_SIZE);
 					}
 				}
 				if(server->users[fds[i].fd].getStillBuilding() == 0)
@@ -504,6 +527,7 @@ int main(int argc, char **argv)
 						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 					}
 				}
+				std::cout << "Buffer: " << server->users[fds[i].fd].getBuffer() << std::endl;
 			}
 		}
 	}
