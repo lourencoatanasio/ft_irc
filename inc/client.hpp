@@ -13,7 +13,11 @@ class user
 {
     public:
         user(int newSocket);
-        user() : clientSocket(-1) {}
+        user() : clientSocket(-1), status(0), from_nc(0), socket_id(0), still_building(0), bytesRead(0), clientSize(0), isOp(false)
+	{
+		std::memset(final_buffer, 0, BUFFER_SIZE);
+		std::memset(buffer, 0, BUFFER_SIZE);
+	}
         ~user();
         int clientSocket;
         std::string getNickname() { return nickname; }

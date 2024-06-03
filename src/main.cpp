@@ -283,7 +283,7 @@ void	channel_send(server *server, std::string nick, std::string username, std::s
 	}
 }
 
-void check_channel(char *buf, int fd, server *server)
+void 	check_channel(char *buf, int fd, server *server)
 {
 	std::string buffer(buf), message, cmd;
 	std::istringstream iss(buffer);
@@ -449,6 +449,7 @@ int main(int argc, char **argv)
 	pollfd serverPfd;
 	serverPfd.fd = server->socket_id; // Use the -> operator to access members of the object pointed to by the pointer
 	serverPfd.events = POLLIN;
+	serverPfd.revents = 0;
 	fds.push_back(serverPfd);
 
     while (true) // Main server loop
@@ -459,6 +460,15 @@ int main(int argc, char **argv)
 
 		if (turn_off)
 		{
+			for (size_t i = 1; i < fds.size(); i++)
+			{
+				close(fds[i].fd);
+			}
+			close(server->socket_id);
+			for (std::map<std::string, channel *>::iterator it = server->channels.begin(); it != server->channels.end(); it++)
+			{
+				delete it->second;
+			}
 			std::cout << "Server shutting down" << std::endl;
 			break;
 		}
@@ -498,7 +508,7 @@ int main(int argc, char **argv)
 					{
 						for (size_t i = 0; i < it->second->users.size(); i++)
 						{
-							if (it->second->users[i].getSocket() == fds[i].fd)
+							if (i < fds.size() && fds[i].fd == it->second->users[i].getSocket())
 							{
 								server->channels.erase(it);
 							}
@@ -516,8 +526,7 @@ int main(int argc, char **argv)
 						std::memset(server->users[fds[i].fd].getFinalBuffer(), 0, BUFFER_SIZE);
 					}
 				}
-				if(server->users[fds[i].fd].getStillBuilding() == 0)
-				{
+				if(server->users[fds[i].fd].getStillBuilding() == 0) {
 					login(i, server, fds, server->users[fds[i].fd].getBuffer());
 					if (server->users[fds[i].fd].getStatus() == 4)
 					{
