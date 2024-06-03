@@ -35,7 +35,7 @@ class user
 		int		modeTopic(server *server, std::string flag, std::string channel);
 		int		modePassword(server *server, std::string channel, std::string flag, std::string key);
 		int		modeLimit(server *server, std::string channel, std::string flag, std::string amount);
-		void	setBuffer(char *buf)  { strcpy(buffer, buf); }
+		void	setBuffer(const char *buf)  { strcpy(buffer, buf); }
 		char	*getBuffer() { return buffer; }
 		void	setFinalBuffer(char *buf)  { strcpy(final_buffer, buf); }
 		char	*getFinalBuffer() { return final_buffer; }

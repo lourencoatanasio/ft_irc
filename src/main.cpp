@@ -121,15 +121,11 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 	std::string buffer(buf);
 	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
 	{
-        //server->users[fd].flag = 0;
 		std::string oldNick = server->users[fd].getNickname();
-		std::string nick = buffer.substr(buffer.find("NICK") + 5);
-		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
-			nick = nick.substr(0, nick.size() - 1);
-		std::size_t endPos = nick.find_first_of("\r\n");
-		if (endPos != std::string::npos)
-			nick = nick.substr(0, endPos);
-		nick = nick.substr(0, nick.find(" "));
+		std::string nick(buffer);
+		nick.erase(0, nick.find("NICK") + 4);
+		nick.erase(0, nick.find_first_not_of(' '));
+		nick.erase(nick.find_first_of("\n\r\t "), nick.size() - 1);
         if (server->users[fd].getOldNick().empty())
             server->users[fd].setOldNick(nick);
 		if (server->users[fd].check_same_nick(nick, server) == 1)
@@ -142,9 +138,6 @@ void	get_nickname_hex(char *buf, int fd, server *server)
             return;
         //server->users[fd].setNickname(nick);
         std::string message = ":" + server->users[fd].getOldNick() + "!" + server->users[fd].getUsername() + " NICK " + nick + "\r\n";
-        std::cout << GREEN << server->users[fd].getOldNick() << NC << std::endl;
-        std::cout << message << std::endl;
-        std::cout << server->users[fd].flag << " " << oldNick << std::endl;
         if (!oldNick.empty() || server->users[fd].flag == 1)
           send_user(fd, message.c_str(), message.size(), 0);
         server->users[fd].setNickname(nick);
@@ -465,15 +458,8 @@ int main(int argc, char **argv)
 			if (fds[i].revents & POLLIN)
             {
                 std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE);
-
-				std::cout << "fds[i].fd = " << fds[i].fd << "\n";
-
                 int bytesRead = recv(fds[i].fd, server->users[fds[i].fd].getBuffer(), BUFFER_SIZE, 0);
-
 				check_still_building(fds[i].fd, server);
-
-				std::cout << "bytesRead = " << bytesRead << "\n";
-
 				if (bytesRead == -1)
 				{
 					std::cerr << "Error in recv(). Quitting" << std::endl;
