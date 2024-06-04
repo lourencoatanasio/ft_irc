@@ -126,14 +126,13 @@ void	get_username_hex(char *buf, int fd, server *server)
 void	get_nickname_hex(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
+	std::cout<< YELLOW << buffer.find("NICK") << "\n" NC;
 	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
 	{
-		std::cout << "nickname\n";
 		std::string oldNick = server->users[fd].getNickname();
 		std::string nick(buffer);
-		nick.erase(0, nick.find("NICK") + 4);
-		nick.erase(0, nick.find_first_not_of(' '));
-		nick.erase(nick.find_first_of("\n\r\t "), nick.size() - 1);
+		nick.erase(0, nick.find("NICK") + 5);
+		nick.erase(nick.find_first_of("\n\r\t"), nick.size() - 1);
         if (server->users[fd].getOldNick().empty())
             server->users[fd].setOldNick(nick);
 		if(server->users[fd].check_same_nick(nick, server) == 1)
@@ -144,15 +143,18 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		}
 		if (oldNick.compare(nick) == 0)
             return;
-        //server->users[fd].setNickname(nick);
         server->users[fd].setNickname(nick);
 		if (!oldNick.empty() || server->users[fd].flag == 1)
+		{
+			std::string message = ":" + server->users[fd].getOldNick() + "!" + server->users[fd].getUsername() + " NICK :" + nick + "\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
 			send_user(fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
+		}
 		std::cout << "Nickname set to: |" << nick << "|\n";
 		server->users[fd].setStatus(2);
 	}
 	else if(server->users[fd].getNickname().empty())
-		send_user(fd, "Please enter your nickname: NICK <nickname>\r\n", 47, 0);
+		send_user(fd, "Please enter your nickname: NICK <nickname>\r\n", 45, 0);
 }
 
 void	get_nickname(char *buf, int fd, server *server)
@@ -180,7 +182,7 @@ void	get_nickname(char *buf, int fd, server *server)
 		nick = nick.substr(0, nick.find(" "));
 		if(server->users[fd].check_same_nick(nick, server) == 1)
 		{
-			send_user(fd, "Nickname already taken, please try again\n", 42, 0);
+			send_user(fd, "Nickname already taken, please try again\r\n", 42, 0);
 			return ;
 		}
         if (oldNick.compare(nick) == 0)
@@ -191,7 +193,7 @@ void	get_nickname(char *buf, int fd, server *server)
         server->users[fd].setStatus(2);
     }
     else if(server->users[fd].getNickname().empty())
-        send_user(fd, "Please enter your nickname: NICK <nickname>\n", 45, 0);
+        send_user(fd, "Please enter your nickname: NICK <nickname>\r\n", 45, 0);
 }
 
 void    get_password(char *buf, int fd, server *server)

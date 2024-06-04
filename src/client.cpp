@@ -303,7 +303,7 @@ void	user::change_nick(char *buf, int fd, server *server)
 			if(from_nc == 0)
 				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 69, 0);
 			else
-				send_user(fd, "Nickname already taken, please try again\n", 41, 0);
+				send_user(fd, "Nickname already taken, please try again\r\n", 42, 0);
 			return;
 		}
 		else if (this->nickname == nick){
