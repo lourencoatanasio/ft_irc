@@ -542,6 +542,7 @@ int main(int argc, char **argv)
 						check_channel(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						check_priv(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
 						server->users[fds[i].fd].check_operator(server->users[fds[i].fd].getBuffer(), fds[i].fd, server);
+						server->users[fds[i].fd].part(server, server->users[fds[i].fd].getBuffer());
 					}
 				}
 				std::cout << "Buffer: " << server->users[fds[i].fd].getBuffer() << std::endl;

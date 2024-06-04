@@ -290,7 +290,7 @@ void	user::change_nick(char *buf, int fd, server *server)
 	std::string buffer(buf), cmd, nick, message;
 	std::istringstream iss(buffer);
 	iss >> cmd >> nick;
-	if (cmd.compare("NICK") == 0)
+	if (cmd.compare("NICK") == 0 && !nick.empty())
 	{
 		while (nick[nick.size() - 1] == ' ' || nick[nick.size() - 1] == '\t')
 			nick = nick.substr(0, nick.size() - 1);
@@ -326,6 +326,26 @@ void	user::change_nick(char *buf, int fd, server *server)
 		send_user(fd, message.c_str(), message.size(), 0);
 		this->setNickname(nick);
 		std::cout << "Nickname set to: |" << nick << "|\n";
+	}
+}
+
+void	user::part(server *server, char *buf)
+{
+	std::string cmd, channelName, message;
+	std::istringstream iss(buf);
+	iss >> cmd >> channelName >> message;
+	if (cmd.compare("PART") == 0)
+	{
+		for (std::map<int, user>::iterator it = server->channels[channelName]->users.begin(); it != server->channels[channelName]->users.end(); it++)
+		{	
+			if (it->second.getNickname() == this->nickname)
+			{
+				message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + message + "\r\n";
+				server->channels[channelName]->users.erase(it);
+				send_all(server, message.c_str(), message.size(), 0, channelName);
+				return ;
+			}
+		}
 	}
 }
 
