@@ -300,6 +300,7 @@ void 	check_channel(char *buf, int fd, server *server)
 		if (server->channels.find(channelName) == server->channels.end())
 		{
 			server->channels[channelName] = new channel();
+            server->channels[channelName]->setOps(1);
 			server->channels[channelName]->users[fd] = server->users[fd];
 			server->channels[channelName]->users[fd].setOpStatus(true);
 			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";

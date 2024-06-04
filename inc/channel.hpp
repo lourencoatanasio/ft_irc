@@ -18,10 +18,12 @@ class channel {
 		bool		getInviteMode(void){return(inviteMode);}
 		std::string	getPassword(void){return(passwd);}
 		int			getMaxUsers(void){return(maxUsers);}
+        int         getOps(void){return(ops);}
 		void		setTopicMode(bool status){topicMode = status;}
 		void		setInviteMode(bool status){inviteMode = status;}
 		void		setPassword(std::string pass){passwd = pass;}
 		void		setmaxUsers(int n){maxUsers = n;}
+        void        setOps(int n){ops = n;}
         std::string	getTopic(void){return(topic);}
         std::string	getUser(void){return(username);}
         std::string	getNick(void){return(nick);}
@@ -34,6 +36,7 @@ class channel {
 		bool		topicMode;
 		bool		inviteMode;
 		int			maxUsers;
+        int         ops;
 		std::string	passwd;
         std::string topic;
         std::string username;

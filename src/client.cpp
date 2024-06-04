@@ -55,10 +55,14 @@ int	user::modeTopic(server *server, std::string channel, std::string flag)
 
 void	user::modeOperator(server *server, user &newOp, std::string channel, std::string flag)
 {
-	if (flag.compare("+o") == 0 && newOp.getOpStatus() == false)
-		newOp.setOpStatus(true);
-	else if (flag.compare("-o") == 0 && newOp.getOpStatus() == true)
-		newOp.setOpStatus(false);
+	if (flag.compare("+o") == 0 && newOp.getOpStatus() == false) {
+        newOp.setOpStatus(true);
+        server->channels[channel]->setOps(server->channels[channel]->getOps() + 1);
+    }
+	else if (flag.compare("-o") == 0 && newOp.getOpStatus() == true) {
+        newOp.setOpStatus(false);
+        server->channels[channel]->setOps(server->channels[channel]->getOps() - 1);
+    }
 	else
 		return ;
 	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + " " + newOp.getUsername() + "\r\n";
@@ -270,19 +274,32 @@ void	user::topic(server *server, char *buf, int fd)
 	server->channels[channel]->setUser(this->username);
 }
 
+int check_valid_channel(std::string channel, server *server)
+{
+    if (server->channels.find(channel) == server->channels.end())
+        return (0);
+    return (1);
+}
+
 void	user::check_operator(char *buf, int fd, server *server) {
     std::string buffer(buf), command, channel, flag;
     std::istringstream iss(buffer);
     iss >> command >> channel >> flag;
 
-	if (command.compare("MODE") == 0 && !flag.empty())
-		mode(server, buf, fd);
-	if (command.compare("KICK") == 0)
-		kick(server, buf, fd);
-	if (command.compare("INVITE") == 0)
-		invite(server, buf, fd); //:luna.AfterNET.Org 341 nick2 nick1 #teste
-	if (command.compare("TOPIC") == 0) 
-		topic(server, buf, fd);
+    std::cout << "Valid channel " << check_valid_channel(channel, server) << std::endl;
+    if (check_valid_channel(channel, server) == 1) {
+        if (command.compare("MODE") == 0 && !flag.empty())
+            mode(server, buf, fd);
+        if (command.compare("KICK") == 0)
+            kick(server, buf, fd);
+        if (command.compare("INVITE") == 0)
+            invite(server, buf, fd);
+        if (command.compare("TOPIC") == 0)
+            topic(server, buf, fd);
+    } else {
+        std::cout << "CHANNEL NOT FOUND => " << channel << std::endl;
+        std::cout << "Channel not found" << std::endl;
+    }
 }
 
 void	user::change_nick(char *buf, int fd, server *server)
@@ -329,21 +346,70 @@ void	user::change_nick(char *buf, int fd, server *server)
 	}
 }
 
+int channel_size(server *server, std::string channel) {
+    int size = 0;
+    for (std::map<int, user>::iterator it = server->channels[channel]->users.begin(); it != server->channels[channel]->users.end(); it++) {
+        if (!it->second.getNickname().empty())
+            size++;
+    }
+    return (size);
+}
+
 void	user::part(server *server, char *buf)
 {
-	std::string cmd, channelName, message;
+	std::string cmd, channelName, message, reason;
 	std::istringstream iss(buf);
-	iss >> cmd >> channelName >> message;
+	iss >> cmd >> channelName >> reason;
 	if (cmd.compare("PART") == 0)
 	{
 		for (std::map<int, user>::iterator it = server->channels[channelName]->users.begin(); it != server->channels[channelName]->users.end(); it++)
 		{	
 			if (it->second.getNickname() == this->nickname)
 			{
-				message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + message + "\r\n";
-				server->channels[channelName]->users.erase(it);
-				send_all(server, message.c_str(), message.size(), 0, channelName);
-				return ;
+                if (server->channels[channelName]->users[it->first].isOp) {
+                    server->channels[channelName]->setOps(server->channels[channelName]->getOps() - 1);
+                    if (server->channels[channelName]->getOps() == 0) {
+                        for (std::map<int, user>::iterator it2 = server->channels[channelName]->users.begin();
+                             it2 != server->channels[channelName]->users.end(); ++it2) {
+                            if (it2->second.getNickname() != this->nickname && it2->second.isOp == false &&
+                                !it2->second.getNickname().empty()) {
+                                it2->second.setOpStatus(true);
+                                message = ":" + this->nickname + "!" + this->username + " MODE " + channelName + " " +
+                                          "+o" + " " + it2->second.getNickname() + "\r\n";
+                                send_all(server, message.c_str(), message.size(), 0, channelName);
+                                message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " +
+                                          reason +
+                                          "\r\n";
+                                send_all(server, message.c_str(), message.size(), 0, channelName);
+                                server->channels[channelName]->users.erase(it);
+                                break;
+                            }
+                        }
+                        if (channel_size(server, channelName) == 1) {
+                            std::cout << "VOU ME PASSAR" << std::endl;
+                            message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
+                                      "\r\n";
+                            std::cout << "MESSAGE = " << message << std::endl;
+                            send_all(server, message.c_str(), message.size(), 0, channelName);
+                            server->channels[channelName]->users.erase(it);
+                            server->channels.erase(channelName);
+                            std::cout << "CHANNEL DELETED => " << channelName << std::endl;
+                            break;
+                        }
+                    } else {
+                        message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
+                                  "\r\n";
+                        send_all(server, message.c_str(), message.size(), 0, channelName);
+                        server->channels[channelName]->users.erase(it);
+                        break;
+                    }
+                } else {
+                    message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
+                              "\r\n";
+                    send_all(server, message.c_str(), message.size(), 0, channelName);
+                    server->channels[channelName]->users.erase(it);
+                    break;
+                }
 			}
 		}
 	}
