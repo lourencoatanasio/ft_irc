@@ -20,6 +20,9 @@ user::user(int newSocket)
 	buffer[0] = '\0';
 	final_buffer[0] = '\0';
 	flag = 0;
+	timeout = 0;
+	time_start = 0;
+	current_time = 0;
     std::cout << "New client connected" << std::endl;
 }
 

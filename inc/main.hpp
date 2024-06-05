@@ -25,7 +25,7 @@
 #include "channel.hpp"
 #include "server.hpp"
 #include <csignal>
-
+#include <ctime>
 
 #define NC "\033[0m"
 #define RED "\033[0;31m"

@@ -53,8 +53,13 @@ class user
 		void	change_nick(char *buf, int fd, server *server);
         int     check_same_nick(std::string nick, server *server);
 		void	part(server *server, char *buf);
+		void	setTimeout(int newTimeout) { timeout = newTimeout; }
+		int		getTimeout() { return timeout; }
         int flag;
+		void	setTimeStart(time_t newTime) { time_start = newTime; }
+		time_t	getTimeStart() { return time_start; }
     protected:
+		int timeout;
         int status;
 		int from_nc;
         int socket_id;
@@ -69,4 +74,6 @@ class user
         std::string oldNick;
         std::string username;
 		bool	isOp;
+		time_t time_start;
+		time_t current_time;
 };
