@@ -461,19 +461,40 @@ std::string get_channel(char *buf)
 	}
 }
 
+size_t check_message(std::string buffer)
+{
+	if (buffer.find("PRIVMSG") != std::string::npos && (buffer.find("PRIVMSG") == 0 || buffer[buffer.find("PRIVMSG") - 1] == '\n'))
+	{
+		std::size_t messageStartPos = buffer.find(":", buffer.find("PRIVMSG") + 8);
+		if (messageStartPos != std::string::npos)
+		{
+			std::string receivedMessage = buffer.substr(messageStartPos + 1);
+			receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
+			receivedMessage.erase(receivedMessage.find_last_not_of(' ') + 1);
+			if (receivedMessage.empty())
+				return (0);
+			else
+				return (messageStartPos);
+		}
+	}
+	return (0);
+}
+
 void	bot_timeout(server *server, char *buffer, int fd)
 {
 	std::string buf(buffer);
 	int caps = 0;
 	int total = 0;
-	std::cout << "bot_timeout\n";
-	for (size_t i = 0; i < buf.size(); i++)
+	size_t messageStartPos = check_message(buf);
+	if (messageStartPos == 0)
+		return ;
+	for (size_t i = messageStartPos; i < buf.size(); i++)
 	{
 		if (isupper(buf[i]))
 			caps++;
 		total++;
 	}
-	if (caps > total / 2)
+	if (caps > total / 2 && server->users[fd].getTimeStart() == 0)
 	{
 		server->users[fd].setTimeout(server->users[fd].getTimeout() + 1);
 	}
@@ -503,10 +524,10 @@ void	bot_timeout(server *server, char *buffer, int fd)
 			}
 			return ;
 		}
-		if (std::difftime(std::time(0), server->users[fd].getTimeStart()) > 30 * (server->users[fd].getTimeout() - 1))
-		{
-			server->users[fd].setTimeStart(0);
-		}
+	}
+	if (std::difftime(std::time(0), server->users[fd].getTimeStart()) > 30 * (server->users[fd].getTimeout() - 1))
+	{
+		server->users[fd].setTimeStart(0);
 	}
 }
 
