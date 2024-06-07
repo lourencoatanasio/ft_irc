@@ -123,6 +123,16 @@ void	get_username_hex(char *buf, int fd, server *server)
 	}
 }
 
+int nick_checker(std::string nick)
+{
+	for (size_t i = 0; i < nick.size(); i++)
+	{
+		if (isalnum(nick[i]) == 0 && nick[i] != '_' && nick[i] != '-')
+			return (1);
+	}
+	return (0);
+}
+
 void	get_nickname_hex(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
@@ -135,6 +145,7 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		nick.erase(nick.find_first_of("\n\r\t"), nick.size() - 1);
         if (server->users[fd].getOldNick().empty())
             server->users[fd].setOldNick(nick);
+		std::cout << "nick = |" << nick << "|\n";
 		if(server->users[fd].check_same_nick(nick, server) == 1)
 		{
 			server->users[fd].flag = 1;
@@ -531,6 +542,18 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	}
 }
 
+void	check_quit(server *server, int fd)
+{
+	std::string buffer(server->users[fd].getBuffer());
+	if (buffer.find("QUIT") != std::string::npos && (buffer.find("QUIT") == 0 || buffer[buffer.find("QUIT") - 1] == '\n'))
+	{
+		std::string nick = server->users[fd].getNickname();
+		std::string username = server->users[fd].getUsername();
+		std::string message = ":" + nick + "!" + username + " QUIT :Client disconnected\r\n";
+		send_all(server, message.c_str(), message.size(), 0, "general");
+	}
+}
+
 int main(int argc, char **argv)
 {
     if(argc != 3)
@@ -625,6 +648,7 @@ int main(int argc, char **argv)
 				}
 				if(server->users[fds[i].fd].getStillBuilding() == 0)
 				{
+//					check_quit(server, fds[i].fd);
 					login(i, server, fds, server->users[fds[i].fd].getBuffer());
 					if (server->users[fds[i].fd].getStatus() == 4)
 					{
