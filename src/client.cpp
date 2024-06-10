@@ -358,7 +358,7 @@ int channel_size(server *server, std::string channel) {
     return (size);
 }
 
-void	user::part(server *server, char *buf)
+void	user::part(server *server, const char *buf)
 {
 	std::string cmd, channelName, message, reason;
 	std::istringstream iss(buf);
@@ -395,6 +395,7 @@ void	user::part(server *server, char *buf)
                             std::cout << "MESSAGE = " << message << std::endl;
                             send_all(server, message.c_str(), message.size(), 0, channelName);
                             server->channels[channelName]->users.erase(it);
+							delete server->channels[channelName];
                             server->channels.erase(channelName);
                             std::cout << "CHANNEL DELETED => " << channelName << std::endl;
                             break;

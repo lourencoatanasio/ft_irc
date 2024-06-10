@@ -52,7 +52,7 @@ class user
 		int		opCheck(server *server, std::string channel, int fd);
 		void	change_nick(char *buf, int fd, server *server);
         int     check_same_nick(std::string nick, server *server);
-		void	part(server *server, char *buf);
+		void	part(server *server, const char *buf);
 		void	setTimeout(int newTimeout) { timeout = newTimeout; }
 		int		getTimeout() { return timeout; }
         int flag;
