@@ -30,7 +30,17 @@ void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 
 	if(server->users[fds[i].fd].getStatus() == 3)
 	{
-		send_user(fds[i].fd, "Congratulations, you are now connected to the server!\r\n", 55, 0);
+		if(server->users[fds[i].fd].getFromNc() == 0)
+		{
+			std::string message = ":ircserver 001 " + server->users[fds[i].fd].getNickname() + " :Welcome to the Internet Relay Network, " + server->users[fds[i].fd].getNickname() + "!\r\n";
+			send_user(fds[i].fd, message.c_str(), message.size(), 0);
+		}
+		else
+		{
+			std::string message = ":ircserver 001 * :Welcome to the Internet Relay Network, *!\r\n";
+			send_user(fds[i].fd, message.c_str(), message.size(), 0);
+		}
+
 		server->users[fds[i].fd].setStatus(4);
 	}
 }
@@ -97,6 +107,8 @@ void	get_username_hex(char *buf, int fd, server *server)
 
 int nick_checker(std::string nick)
 {
+	if(isalpha(nick[0]) == 0 && nick[0] != '_' && nick[0] != '-')
+		return (1);
 	for (size_t i = 0; i < nick.size(); i++)
 	{
 		if (isalnum(nick[i]) == 0 && nick[i] != '_' && nick[i] != '-')
@@ -107,7 +119,6 @@ int nick_checker(std::string nick)
 
 void	get_nickname_hex(char *buf, int fd, server *server)
 {
-//	int space = 0;
 	std::string buffer(buf);
 	std::cout<< YELLOW << buffer.find("NICK") << "\n" NC;
 	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
@@ -119,20 +130,33 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		if (server->users[fd].getOldNick().empty())
 			server->users[fd].setOldNick(nick);
 		std::cout << "nick = |" << nick << "|\n";
-//		for(size_t i = 0; i < nick.size(); i++)
-//		{
-//			if(nick[0] == ' ' || nick[0] == '\t')
-//			{
-//				nick = nick.substr(1);
-//				space = 1;
-//			}
-//			else
-//				break;
-//		}
-		if(server->users[fd].check_same_nick(nick, server) == 1)
+		for(size_t i = 0; i < nick.size(); i++)
+		{
+			if(nick[0] == ' ' || nick[0] == '\t')
+			{
+				nick = nick.substr(1);
+				i = 0;
+			}
+			else
+				break;
+		}
+		std::cout << "nick after cut = |" << nick << "|\n";
+		if(nick.find(" ") != std::string::npos)
+		{
+			nick = nick.substr(0, nick.find(" "));
+			std::cout << "has space\n";
+			std::cout << "nick = |" << nick << "|\n";
+		}
+		if(server->users[fd].check_same_nick(nick, server) == 1 || nick_checker(nick) == 1)
 		{
 			server->users[fd].flag = 1;
-			send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 68, 0);
+			if(server->users[fd].getFromNc() == 1)
+				send_user(fd, "Nickname is erroneous or already in use. Use /NICK to try another.\r\n", 68, 0);
+			else
+			{
+				std::string message = ":ircserver 432 * " + nick + " :Erroneous Nickname\r\n";
+				send_user(fd, message.c_str(), message.size(), 0);
+			}
 			return ;
 		}
 		if (oldNick.compare(nick) == 0)
@@ -140,10 +164,12 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		server->users[fd].setNickname(nick);
 		if (!oldNick.empty() || server->users[fd].flag == 1)
 		{
-			std::string message = ":" + server->users[fd].getOldNick() + "!" + server->users[fd].getUsername() + " NICK :" + nick + "\r\n";
-			send_user(fd, message.c_str(), message.size(), 0);
+//			std::string message = ":" + server->users[fd].getOldNick() + "!" + server->users[fd].getUsername() + " NICK :" + nick + "\r\n";
+//			send_user(fd, message.c_str(), message.size(), 0);
 			send_user(fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
 		}
+
+		// write a message to send the user just so the client knows what nick the server has set it to
 		std::cout << "Nickname set to: |" << nick << "|\n";
 		server->users[fd].setStatus(2);
 	}
