@@ -57,6 +57,7 @@ void check_channel(char *buf, int fd, server *server);
 void check_priv(char *buf, int fd, server *server);
 void check_source(int fd, server *server, int ret);
 void check_still_building(int fd, server *server);
+void	check_leave(server *server, char *buffer, int fd);
 std::string get_channel(char *buf);
 size_t check_message(std::string buffer);
 void bot_timeout(server *server, char *buffer, int fd);

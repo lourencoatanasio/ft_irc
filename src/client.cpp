@@ -62,7 +62,14 @@ void	user::modeOperator(server *server, user &newOp, std::string channel, std::s
         newOp.setOpStatus(true);
         server->channels[channel]->setOps(server->channels[channel]->getOps() + 1);
     }
-	else if (flag.compare("-o") == 0 && newOp.getOpStatus() == true) {
+	else if (flag.compare("-o") == 0 && newOp.getOpStatus() == true)
+	{
+		if (server->channels[channel]->getOps() == 1)
+		{
+			std::string message = ": 482 " + this->nickname + " " + channel + " You're the sole Operator of this channel! Don't give up!\r\n";
+			send_user(this->clientSocket, message.c_str(), message.size(), 0);
+			return ;
+		}
         newOp.setOpStatus(false);
         server->channels[channel]->setOps(server->channels[channel]->getOps() - 1);
     }

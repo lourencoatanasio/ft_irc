@@ -112,6 +112,12 @@ void check_priv(char *buf, int fd, server *server)
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
+			if (server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
+			{
+				std::string message = ": 404 " + nick + " " + channel + " :Cannot send to channel\r\n";
+				send_user(fd, message.c_str(), message.size(), 0);
+				return ;
+			}
 			std::size_t messageStartPos = buffer.find(":", channelEndPos);
 			if (messageStartPos != std::string::npos) {
 				std::string receivedMessage = buffer.substr(messageStartPos + 1);
@@ -126,7 +132,7 @@ void check_priv(char *buf, int fd, server *server)
 			}
 		}
 		else {
-			std::size_t messageStartPos = buffer.find(":", channelEndPos);
+			std::size_t messageStartPos = buffer.find(":", channelEndPos + 1);
 			if (messageStartPos != std::string::npos) {
 				std::string receivedMessage = buffer.substr(messageStartPos + 1);
 				receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
@@ -134,11 +140,15 @@ void check_priv(char *buf, int fd, server *server)
 				std::map<int, user>::iterator it;
 				for (it = server->users.begin(); it != server->users.end(); ++it) {
 					std::string message = ":" + nick + "!" + username + " PRIVMSG " + it->second.getNickname() + " :" + receivedMessage + "\r\n";
-					if (it->second.getNickname() == channel) {
+					if (it->second.getNickname() == channel && nick != channel) {
 						std::cout << "Sending private message to " << it->second.getNickname() << std::endl;
 						send_user(it->second.getSocket(), message.c_str(), message.size(), 0);
+						return ;
 					}
 				}
+				std::string message =  ": 401 " + nick + " " + channel + " :No such nick\r\n";
+				std::cout << GREEN << message << " " << channel << "\n" NC;
+				send_user(server->users[fd].getSocket(), message.c_str(), message.size(), 0);
 			}
 		}
 	}
@@ -152,4 +162,13 @@ int	check_valid(std::string buffer)
 		return (1);
 	}
 	return (0);
+}
+
+void    check_leave(server *server, char *buffer, int fd)
+{
+	std::string buf(buffer);
+	if (buf.find("QUIT") != std::string::npos && (buf.find("QUIT") == 0 || buf[buf.find("QUIT") - 1] == '\n'))
+	{
+		delete_user(server, fd);
+	}
 }

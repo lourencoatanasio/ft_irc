@@ -26,6 +26,9 @@ class server
         std::map<std::string, channel*> channels;
         std::map<int, user> users;
         std::string getPass() { return password; }
+		void		run(user user, std::vector<pollfd> fds, int fd, int i);
+		void		disconnect(std::vector<pollfd> fds, int fd, int i);
+		void		shutDown(std::vector<pollfd> fds);
     private:
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
