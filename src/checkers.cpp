@@ -51,9 +51,15 @@ void 	check_channel(char *buf, int fd, server *server)
 		std::string username = server->users[fd].getUsername();
 		std::string nick = server->users[fd].getNickname();
 		std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
-		std::size_t endPos = channelName.find_first_of("\t\n\r ");
+		std::size_t endPos = channelName.find_first_of("\t\n\r ,");
 		if (endPos != std::string::npos)
 			channelName = channelName.substr(0, endPos);
+		if(channelName[0] != '#' || channelName.size() > 200)
+		{
+			std::string message = ": 403 " + nick + " " + channelName + " :No such channel\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			return;
+		}
 		if (server->channels.find(channelName) == server->channels.end())
 		{
 			std::cout << "Creating channel " << channelName << std::endl;
