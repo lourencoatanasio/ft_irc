@@ -112,7 +112,7 @@ void check_priv(char *buf, int fd, server *server)
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
-			if (server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
+			if (server->channels[channel]->users[fd].getSocket() <= 0)
 			{
 				std::string message = ": 404 " + nick + " " + channel + " :Cannot send to channel\r\n";
 				send_user(fd, message.c_str(), message.size(), 0);
@@ -140,7 +140,7 @@ void check_priv(char *buf, int fd, server *server)
 				std::map<int, user>::iterator it;
 				for (it = server->users.begin(); it != server->users.end(); ++it) {
 					std::string message = ":" + nick + "!" + username + " PRIVMSG " + it->second.getNickname() + " :" + receivedMessage + "\r\n";
-					if (it->second.getNickname() == channel && nick != channel) {
+					if (it->second.getNickname() == channel) {
 						std::cout << "Sending private message to " << it->second.getNickname() << std::endl;
 						send_user(it->second.getSocket(), message.c_str(), message.size(), 0);
 						return ;
