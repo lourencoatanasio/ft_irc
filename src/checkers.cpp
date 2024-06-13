@@ -37,7 +37,6 @@ void	check_still_building(int fd, server *server)
 
 	if (buffer.find("\n") == std::string::npos)
 	{
-		std::cout << "still building\n";
 		server->users[fd].setStillBuilding(1);
 	}
 }
@@ -100,7 +99,6 @@ void 	check_channel(char *buf, int fd, server *server)
 void check_priv(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-    std::cout << "BUFFER => " << buf << std::endl;
 	if (buffer.find("PRIVMSG") != std::string::npos && (buffer.find("PRIVMSG") == 0 || buffer[buffer.find("PRIVMSG") - 1] == '\n')) {
 		std::string nick = server->users[fd].getNickname();
 		std::string username = server->users[fd].getUsername();
@@ -148,7 +146,6 @@ void check_priv(char *buf, int fd, server *server)
 					}
 				}
 				std::string message =  ": 401 " + nick + " " + channel + " :No such nick\r\n";
-				std::cout << GREEN << message << " " << channel << "\n" NC;
 				send_user(server->users[fd].getSocket(), message.c_str(), message.size(), 0);
 			}
 		}
