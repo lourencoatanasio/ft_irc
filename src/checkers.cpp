@@ -100,6 +100,7 @@ void 	check_channel(char *buf, int fd, server *server)
 void check_priv(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
+    std::cout << "BUFFER => " << buf << std::endl;
 	if (buffer.find("PRIVMSG") != std::string::npos && (buffer.find("PRIVMSG") == 0 || buffer[buffer.find("PRIVMSG") - 1] == '\n')) {
 		std::string nick = server->users[fd].getNickname();
 		std::string username = server->users[fd].getUsername();

@@ -84,8 +84,8 @@ void	server::run(user *user, std::vector<pollfd> fds, int fd, int i)
                     if (timeoutDuration <= 0) {
                         channels[channel]->users[fd].setTimeStart(0); // Reset timeStart
                     }
-                    check_priv(channels[channel]->users[fd].getBuffer(), fd, this);
-                    channels[channel]->users[fd].check_operator(channels[channel]->users[fd].getBuffer(), fd, this);
+                    check_priv(user->getBuffer(), fd, this);
+                    user->check_operator(user->getBuffer(), fd, this);
                 }
                 else
                 {
