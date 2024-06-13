@@ -24,9 +24,16 @@ void	server::disconnect(std::vector<pollfd> fds, int fd, int i)
 	users.erase(fd);
 	for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
-		for (size_t i = 0; i < it->second->users.size(); i++)
-			if (i < fds.size() && fd == it->second->users[i].getSocket())
-				channels.erase(it);
+        if (it->second->users.find(fd) != it->second->users.end()) {
+            std::string message =
+                    ":" + it->second->users[fd].getNickname() + "!" + it->second->users[fd].getUsername() +
+                    " PART " + it->first + " " +
+                    "Client Disconnected" +
+                    "\r\n";
+            send_all(this, message.c_str(), message.size(), 0, it->first);
+            channels.erase(it);
+            break;
+        }
 	}
 }
 
