@@ -3,7 +3,7 @@ RED			=	\033[0;31m
 YELLOW		=	\033[0;33m
 END			=	\033[0m
 
-NAME		=	ft_irc
+NAME		=	ircserv
 
 SRCS		=	$(wildcard src/*.cpp)
 

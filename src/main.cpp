@@ -7,7 +7,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	int newClientSocket = accept(server->socket_id, NULL, NULL);
 	if (newClientSocket == -1)
 	{
-		std::cerr << "Can't accept client!";
+		std::cerr << "Error in accept(). Quitting" << std::endl;
 		return;
 	}
 	user newUser(newClientSocket);
@@ -131,7 +131,6 @@ int main(int argc, char **argv)
 	}
 	server serverT(argv[2], argv[1]); // Create a server object
 	server *server = &serverT; // Create a pointer to the server object
-
 	std::vector<pollfd> fds;
 
 	pollfd serverPfd;

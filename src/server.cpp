@@ -16,7 +16,8 @@ int check_valid_port(char *port)
 	return (0);
 }
 
-void    server::disconnect(std::vector<pollfd> fds, int fd, int i) {
+void    server::disconnect(std::vector<pollfd> &fds, int fd, int i)
+{
     std::cout << "Client disconnected" << std::endl;
     close(fd);
     fds.erase(fds.begin() + i);
@@ -25,12 +26,24 @@ void    server::disconnect(std::vector<pollfd> fds, int fd, int i) {
             std::string message = "PART " + it->first + " :Leaving\n\r";
             const char *str = message.c_str();
             it->second->users[fd].part(this, str);
+			users.erase(fd);
             break;
         }
     }
 }
 
-void	server::shutDown(std::vector<pollfd> fds)
+std::string get_user(std::string buf, server *server) {
+	std::size_t nickStartPos = buf.find("PRIVMSG ") + 8;
+	std::size_t nickEndPos = buf.find(" :", nickStartPos);
+	std::string nick = buf.substr(nickStartPos, nickEndPos - nickStartPos);
+	for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); it++) {
+		if (it->second.getNickname() == nick)
+			return (nick);
+	}
+	return ("");
+}
+
+void	server::shutDown(std::vector<pollfd> &fds)
 {
 	for (size_t i = 1; i < fds.size(); i++)
 	{
@@ -44,7 +57,7 @@ void	server::shutDown(std::vector<pollfd> fds)
 	std::cout << "Server shutting down" << std::endl;
 }
 
-void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
+void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 {
 	if(sUser->getStillBuilding() == 1)
 	{
@@ -95,7 +108,7 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
                     }
                 }
             }
-			else if (!channelName.empty())
+			else if (!get_user(buff, this).empty())
 				check_priv(sUser->getBuffer(), fd, this);
 		}
 	}
