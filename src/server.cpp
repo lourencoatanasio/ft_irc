@@ -16,25 +16,18 @@ int check_valid_port(char *port)
 	return (0);
 }
 
-void	server::disconnect(std::vector<pollfd> fds, int fd, int i)
-{
-	std::cout << "Client disconnected" << std::endl;
-	close(fd);
-	fds.erase(fds.begin() + i);
-	users.erase(fd);
-	for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++)
-	{
+void    server::disconnect(std::vector<pollfd> fds, int fd, int i) {
+    std::cout << "Client disconnected" << std::endl;
+    close(fd);
+    fds.erase(fds.begin() + i);
+    for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
         if (it->second->users.find(fd) != it->second->users.end()) {
-            std::string message =
-                    ":" + it->second->users[fd].getNickname() + "!" + it->second->users[fd].getUsername() +
-                    " PART " + it->first + " " +
-                    "Client Disconnected" +
-                    "\r\n";
-            send_all(this, message.c_str(), message.size(), 0, it->first);
-            channels.erase(it);
+            std::string message = "PART " + it->first + " :Leaving\n\r";
+            const char *str = message.c_str();
+            it->second->users[fd].part(this, str);
             break;
         }
-	}
+    }
 }
 
 void	server::shutDown(std::vector<pollfd> fds)

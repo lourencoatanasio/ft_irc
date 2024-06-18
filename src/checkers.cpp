@@ -162,11 +162,18 @@ int	check_valid(std::string buffer)
 	return (0);
 }
 
-void    check_leave(server *server, char *buffer, int fd)
-{
-	std::string buf(buffer);
-	if (buf.find("QUIT") != std::string::npos && (buf.find("QUIT") == 0 || buf[buf.find("QUIT") - 1] == '\n'))
-	{
-		delete_user(server, fd);
-	}
+void    check_leave(server *server, char *buffer, int fd) {
+    std::string buf(buffer);
+    if (buf.find("QUIT") != std::string::npos && (buf.find("QUIT") == 0 || buf[buf.find("QUIT") - 1] == '\n')) {
+        std::cout << "Client disconnected" << std::endl;
+        close(fd);
+        for (std::map<std::string, channel *>::iterator it = server->channels.begin(); it != server->channels.end(); it++) {
+            if (it->second->users.find(fd) != it->second->users.end()) {
+                std::string message = "PART " + it->first + " :Leaving\n\r";
+                const char *str = message.c_str();
+                it->second->users[fd].part(server, str);
+                break;
+            }
+        }
+    }
 }
