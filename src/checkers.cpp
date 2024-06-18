@@ -26,7 +26,9 @@ size_t check_message(std::string buffer)
 int	check_valid_command(std::string str)
 {
 	if (str.compare("WHO") == 0 || str.compare("MODE") == 0
-	|| str.compare("JOIN") == 0 || str.compare("NICK") == 0)
+	|| str.compare("JOIN") == 0 || str.compare("NICK") == 0
+	|| str.compare("INVITE") == 0 || str.compare("TOPIC") == 0
+	|| str.compare("KICK") == 0)
 		return (1);
 	return (0);
 }
@@ -58,6 +60,8 @@ void	check_channel(char *buf, int fd, server *server)
 		std::string username = server->users[fd].getUsername();
 		std::string nick = server->users[fd].getNickname();
 		std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
+		if (!channelName.empty())
+			std::cout <<"MAX: " << server->channels[channelName]->getMaxUsers() << " USERS: " << channel_size(server, channelName) << std::endl;
 		std::size_t endPos = channelName.find_first_of("\t\n\r ,");
 		if (endPos != std::string::npos)
 			channelName = channelName.substr(0, endPos);
@@ -76,7 +80,7 @@ void	check_channel(char *buf, int fd, server *server)
 			server->channels[channelName]->users[fd].setOpStatus(true);
 			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
 		}
-		else if (server->channels[channelName]->getMaxUsers() < (int)server->channels[channelName]->users.size()
+		else if (server->channels[channelName]->getMaxUsers() <= channel_size(server, channelName)
 		         && server->channels[channelName]->getMaxUsers() > 0)
 		{
 			message = ": 471 " + nick + " " + channelName + " :Cannot join channel (+l)\r\n";

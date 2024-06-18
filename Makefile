@@ -17,13 +17,11 @@ RM			= rm -rf
 all:			$(NAME)
 					@echo "$(GREEN)ft_irc successfully compiled!$(END)"
 					@sleep 0.5
-					@clear
 
 $(OBJ_DIR)/%.o:	src/%.cpp | $(OBJ_DIR)
 					@$(CC) $(CFLAGS) -c $< -o $@
 
 $(NAME):	$(OBJS)
-					@clear
 					@echo "$(YELLOW)Compiling ft_irc...$(END)"
 					@$(CC) $(OBJS) $(CFLAGS) -o $(NAME)
 
@@ -32,14 +30,12 @@ $(OBJ_DIR):
 
 clean:
 					@$(RM) $(OBJ_DIR)
-					@clear
 					@echo "$(RED)All objects deleted!$(END)"
 
 fclean:		clean
 					@$(RM) $(NAME)
 					@echo "$(RED)All executables deleted!$(END)"
 					@sleep 0.5
-					@clear
 
 re:				fclean all
 

@@ -198,6 +198,7 @@ void	user::invite(server *server, char *buf, int fd)
 	std::string command, channel, nameOp;
 	std::istringstream iss2(buf);
 	iss2 >> command >> nameOp >> channel;
+	std::cout <<"OIII" << std::endl;
 	bool userExists = false;
 
 	for (std::size_t i = 0; i < server->users.size(); i++) {
@@ -296,13 +297,16 @@ void	user::check_operator(char *buf, int fd, server *server) {
 	std::istringstream iss(buffer);
 	iss >> command >> channel >> flag;
 
-	if (check_valid_channel(channel, server) == 1) {
+	if(command.compare("INVITE") == 0 && check_valid_channel(flag, server))
+	{
+		invite(server, buf, fd);
+	}
+	if (check_valid_channel(channel, server) == 1)
+	{
 		if (command.compare("MODE") == 0 && !flag.empty())
 			mode(server, buf, fd);
 		if (command.compare("KICK") == 0)
 			kick(server, buf, fd);
-		if (command.compare("INVITE") == 0)
-			invite(server, buf, fd);
 		if (command.compare("TOPIC") == 0)
 			topic(server, buf, fd);
 	}
