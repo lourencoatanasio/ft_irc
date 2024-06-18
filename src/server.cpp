@@ -125,8 +125,7 @@ server::server(char *password, char *port)
         exit(EXIT_FAILURE);
     }
 
-    int flags = fcntl(socket_id, F_GETFL, 0);
-    fcntl(socket_id, F_SETFL, flags | O_NONBLOCK);
+    fcntl(socket_id, F_SETFL, O_NONBLOCK);
 
     this->IP.sin_family = AF_INET;
     if (inet_pton(AF_INET, this->server_ip, &this->IP.sin_addr) <= 0) {
