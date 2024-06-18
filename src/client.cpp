@@ -365,7 +365,7 @@ void	user::part(server *server, const char *buf)
 	std::string cmd, channelName, message, reason;
 	std::istringstream iss(buf);
 	iss >> cmd >> channelName >> reason;
-	if (cmd.compare("PART") == 0)
+	if (cmd.compare("PART") == 0 && !channelName.empty() && check_valid_channel(channelName, server) == 1)
 	{
 		for (std::map<int, user>::iterator it = server->channels[channelName]->users.begin(); it != server->channels[channelName]->users.end(); it++)
 		{	

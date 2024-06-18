@@ -22,7 +22,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	send_user(newPfd.fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
 }
 
-std::string get_channel(char *buf)
+std::string get_channel(char *buf, server *server)
 {
 	std::string buffer(buf);
 	// channel = first # found in buffer
@@ -31,9 +31,14 @@ std::string get_channel(char *buf)
 		return ("");
 	else
 	{
-		std::string channel = buffer.substr(channelStartPos);
-		std::size_t channelEndPos = channel.find_first_of("\t\n\r ");
-		return (channel.substr(0, channelEndPos));
+		std::string channelName = buffer.substr(channelStartPos);
+		std::size_t channelEndPos = channelName.find_first_of("\t\n\r ");
+        for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); ++it)
+        {
+            if (it->first == channelName.substr(0, channelEndPos))
+                return (channelName.substr(0, channelEndPos));
+        }
+		return ("");
 	}
 }
 
@@ -74,7 +79,7 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	int caps = 0;
 	int total = 0;
 
-	std::string channel = get_channel(buffer);
+	std::string channel = get_channel(buffer, server);
 
 	size_t messageStartPos = check_message(buf);
 	if (messageStartPos == 0 || channel.empty())
