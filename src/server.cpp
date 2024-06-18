@@ -68,9 +68,8 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
 			sUser->part(this, sUser->getBuffer());
             std::string buff = sUser->getBuffer();
             std::string start = buff.substr(0, 4);
-            std::string channelName = get_channel(sUser->getBuffer());
-            if ((check_valid_command(start) || buff.substr(0, 7) == "PRIVMSG") && !channelName.empty()
-			&& start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
+            std::string channelName = get_channel(sUser->getBuffer(), this);
+            if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
             {
                 int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
                 if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || check_valid_command(start))

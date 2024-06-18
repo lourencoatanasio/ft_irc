@@ -59,7 +59,7 @@ void check_source(int fd, server *server, int ret);
 void check_still_building(int fd, server *server);
 int	check_valid_command(std::string str);
 void	check_leave(server *server, char *buffer, int fd);
-std::string get_channel(char *buf);
+std::string get_channel(char *buf, server *server);
 size_t check_message(std::string buffer);
 void bot_timeout(server *server, char *buffer, int fd);
 void delete_user(server *server, int fd);
