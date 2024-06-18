@@ -65,14 +65,6 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
 	}
 	if(sUser->getStillBuilding() == 0)
 	{
-		for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++)
-		{
-			std::cout << GREEN "Channel: " << it->first << NC "\n";
-			for (std::map<int, user>::iterator it2 = it->second->users.begin(); it2 != it->second->users.end(); it2++)
-			{
-				std::cout << YELLOW "User: " << it2->second.getNickname() << NC "\n";
-			}
-		}
 		check_leave(this, sUser->getBuffer(), fd);
 		login(i, this, fds, sUser->getBuffer());
 		if (sUser->getStatus() == 4)
@@ -87,7 +79,6 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
             if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
             {
                 int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
-				std::cout <<  GREEN "CHANNEL: " << channelName << NC "\n";
                 if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || start == "WHO " || start == "MODE" || start == "JOIN" || start == "PART" || start == "NICK")
                 {
                     if (timeoutDuration <= 0) {
@@ -106,7 +97,6 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
                     else
                     {
                         // get the fd from the sUser on the current channel
-                        std::cout << "NICK " << channels[channelName]->users[fd].getNickname() << std::endl;
                         std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" + channels[channelName]->users[fd].getUsername() + " PRIVMSG " + channelName + " :" + message + "\r\n";
                         send_user(fd, channelMessage.c_str(), channelMessage.size(), 0);
                     }

@@ -28,15 +28,11 @@ std::string get_channel(char *buf)
 	// channel = first # found in buffer
 	std::size_t channelStartPos = buffer.find("#");
 	if (channelStartPos == std::string::npos)
-	{
-		std::cout << "No channel found in buffer" << std::endl;
 		return ("");
-	}
 	else
 	{
 		std::string channel = buffer.substr(channelStartPos);
 		std::size_t channelEndPos = channel.find_first_of("\t\n\r ");
-		std::cout << "channel = " << channel.substr(0, channelEndPos) << std::endl;
 		return (channel.substr(0, channelEndPos));
 	}
 }

@@ -44,7 +44,6 @@ void	channel_send(server *server, std::string nick, std::string username, std::s
 		if (server->channels[channelName]->users[i].getOpStatus() == true)
 			v[1] += "@";
 		v[1] += server->channels[channelName]->users[i].getNickname() + " ";
-		std::cout << "nick on channel send = " << server->channels[channelName]->users[i].getNickname() << std::endl;
 	}
 	v[1] += "\r\n";
 	v.push_back(": 366 " + nick + " " + channelName + " :End of /NAMES list.\r\n");

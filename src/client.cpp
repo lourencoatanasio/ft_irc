@@ -305,9 +305,6 @@ void	user::check_operator(char *buf, int fd, server *server) {
 			invite(server, buf, fd);
 		if (command.compare("TOPIC") == 0)
 			topic(server, buf, fd);
-	} else {
-		std::cout << "CHANNEL NOT FOUND => " << channel << std::endl;
-		std::cout << "Channel not found" << std::endl;
 	}
 }
 
@@ -351,7 +348,6 @@ void	user::change_nick(char *buf, int fd, server *server)
 		message = ":" + this->nickname + "!" + this->username + " NICK :" + nick + "\r\n";
 		send_user(fd, message.c_str(), message.size(), 0);
 		this->setNickname(nick);
-		std::cout << "Nickname set to: |" << nick << "|\n";
 	}
 }
 
@@ -375,7 +371,6 @@ void	user::part(server *server, const char *buf)
 		{	
 			if (it->second.getNickname() == this->nickname) {
 				if (server->channels[channelName]->users[it->first].isOp) {
-					std::cout << "AMOUNT OF OPERATORS: " << server->channels[channelName]->getOps() << '\n';
 					server->channels[channelName]->setOps(server->channels[channelName]->getOps() - 1);
 					if (server->channels[channelName]->getOps() == 0) {
 						for (std::map<int, user>::iterator it2 = server->channels[channelName]->users.begin();

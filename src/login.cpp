@@ -8,7 +8,6 @@ void	login(int i, server *server, std::vector<pollfd> &fds, char *buffer)
 {
 	if (server->users[fds[i].fd].getStatus() < 3 && server->users[fds[i].fd].getFromNc() == 0)
 	{
-		std::cout << "status = " << server->users[fds[i].fd].getStatus() << "\n";
 		if (server->users[fds[i].fd].getStatus() == 0)
 			get_username_hex(buffer, fds[i].fd, server);
 		if (server->users[fds[i].fd].getStatus() == 1)
@@ -70,9 +69,7 @@ void	get_username(char *buf, int fd, server *server)
 				username = username.substr(0, endPos);
 			username = username.substr(0, username.find(" "));
 			server->users[fd].setUsername(username);
-			std::cout << "Username set to: |" << username << "|\n";
 			server->users[fd].setStatus(3);
-			std::cout << "status = " << server->users[fd].getStatus() << "\n";
 		}
 		else
 			send_user(fd, "You may not reregister\n", 23, 0);
@@ -97,7 +94,6 @@ void	get_username_hex(char *buf, int fd, server *server)
 				username = username.substr(0, endPos);
 			username = username.substr(0, username.find(" "));
 			server->users[fd].setUsername(username);
-			std::cout << "Username set to: |" << username << "|\n";
 			server->users[fd].setStatus(1);
 		}
 		else
@@ -120,7 +116,6 @@ int nick_checker(std::string nick)
 void	get_nickname_hex(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-	std::cout<< YELLOW << buffer.find("NICK") << "\n" NC;
 	if (buffer.find("NICK") != std::string::npos && (buffer.find("NICK") == 0 || buffer[buffer.find("NICK") - 1] == '\n'))
 	{
 		std::string oldNick = server->users[fd].getNickname();
@@ -129,7 +124,6 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		nick.erase(nick.find_first_of("\n\r\t"), nick.size() - 1);
 		if (server->users[fd].getOldNick().empty())
 			server->users[fd].setOldNick(nick);
-		std::cout << "nick = |" << nick << "|\n";
 		for(size_t i = 0; i < nick.size(); i++)
 		{
 			if(nick[0] == ' ' || nick[0] == '\t')
@@ -140,13 +134,8 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 			else
 				break;
 		}
-		std::cout << "nick after cut = |" << nick << "|\n";
 		if(nick.find(" ") != std::string::npos)
-		{
 			nick = nick.substr(0, nick.find(" "));
-			std::cout << "has space\n";
-			std::cout << "nick = |" << nick << "|\n";
-		}
 		if(server->users[fd].check_same_nick(nick, server) == 1 || nick_checker(nick) == 1)
 		{
 			server->users[fd].flag = 1;
@@ -163,14 +152,8 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 			return;
 		server->users[fd].setNickname(nick);
 		if (!oldNick.empty() || server->users[fd].flag == 1)
-		{
-//			std::string message = ":" + server->users[fd].getOldNick() + "!" + server->users[fd].getUsername() + " NICK :" + nick + "\r\n";
-//			send_user(fd, message.c_str(), message.size(), 0);
 			send_user(fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
-		}
-
 		// write a message to send the user just so the client knows what nick the server has set it to
-		std::cout << "Nickname set to: |" << nick << "|\n";
 		server->users[fd].setStatus(2);
 	}
 	else if(server->users[fd].getNickname().empty())
@@ -208,8 +191,6 @@ void	get_nickname(char *buf, int fd, server *server)
 		if (oldNick.compare(nick) == 0)
 			return ;
 		server->users[fd].setNickname(nick);
-		std::cout << "status = " << server->users[fd].getStatus() << "\n";
-		std::cout << "Nickname set to: |" << nick << "|\n";
 		server->users[fd].setStatus(2);
 	}
 	else if(server->users[fd].getNickname().empty())
@@ -235,8 +216,6 @@ void    get_password(char *buf, int fd, server *server)
 			pass = pass.substr(0, endPos);
 		if (pass != server->getPass())
 		{
-			std::cout << server->getPass() << std::endl;
-			std::cout << pass << std::endl;
 			send_user(fd, "You've entered the wrong password, please try again\n", 53, 0);
 			return ;
 		}
@@ -253,7 +232,6 @@ void    get_password(char *buf, int fd, server *server)
 void	get_password_hex(char *buf, int fd, server *server)
 {
 	std::string buffer(buf);
-	std::cout << "password\n";
 	if (buffer.find("PASS") != std::string::npos && (buffer.find("PASS") == 0 || buffer[buffer.find("PASS") - 1] == '\n'))
 	{
 		std::string pass = buffer.substr(buffer.find("PASS") + 5);
