@@ -23,6 +23,14 @@ size_t check_message(std::string buffer)
 	return (0);
 }
 
+int	check_valid_command(std::string str)
+{
+	if (str.compare("WHO") == 0 || str.compare("MODE") == 0
+	|| str.compare("JOIN") == 0 || str.compare("NICK") == 0)
+		return (1);
+	return (0);
+}
+
 void	check_source(int fd, server *server, int ret)
 {
 	if(ret == 0 && (server->users[fd].getNickname().empty() && server->users[fd].getUsername().empty()))
@@ -41,7 +49,7 @@ void	check_still_building(int fd, server *server)
 	}
 }
 
-void 	check_channel(char *buf, int fd, server *server)
+void	check_channel(char *buf, int fd, server *server)
 {
 	std::string buffer(buf), message, cmd;
 	std::istringstream iss(buffer);
@@ -57,7 +65,7 @@ void 	check_channel(char *buf, int fd, server *server)
 		{
 			std::string message = ": 403 " + nick + " " + channelName + " :No such channel\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
-			return;
+			return ;
 		}
 		if (server->channels.find(channelName) == server->channels.end())
 		{
@@ -73,13 +81,13 @@ void 	check_channel(char *buf, int fd, server *server)
 		{
 			message = ": 471 " + nick + " " + channelName + " :Cannot join channel (+l)\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
-			return;
+			return ;
 		}
 		else if (server->channels[channelName]->getInviteMode() == true)
 		{
 			std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
-			return;
+			return ;
 		}
 		else
 			server->channels[channelName]->users[fd] = server->users[fd];
@@ -140,7 +148,7 @@ void check_priv(char *buf, int fd, server *server)
 				for (it = server->users.begin(); it != server->users.end(); ++it) {
 					std::string message = ":" + nick + "!" + username + " PRIVMSG " + it->second.getNickname() + " :" + receivedMessage + "\r\n";
 					if (it->second.getNickname() == channel) {
-						std::cout << "Sending private message to " << it->second.getNickname() << std::endl;
+						std::cout << "Sending private message to " << it->second.getNickname() << NC << std::endl;
 						send_user(it->second.getSocket(), message.c_str(), message.size(), 0);
 						return ;
 					}

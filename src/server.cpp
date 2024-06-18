@@ -76,10 +76,11 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
             std::string buff = sUser->getBuffer();
             std::string start = buff.substr(0, 4);
             std::string channelName = get_channel(sUser->getBuffer());
-            if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
+            if ((check_valid_command(start) || buff.substr(0, 7) == "PRIVMSG") && !channelName.empty()
+			&& start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
             {
                 int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
-                if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || start == "WHO " || start == "MODE" || start == "JOIN" || start == "PART" || start == "NICK")
+                if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || check_valid_command(start))
                 {
                     if (timeoutDuration <= 0) {
                         channels[channelName]->users[fd].setTimeStart(0); // Reset timeStart
@@ -102,6 +103,8 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
                     }
                 }
             }
+			else
+				check_priv(sUser->getBuffer(), fd, this);
 		}
 	}
 }
