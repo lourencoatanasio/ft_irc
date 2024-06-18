@@ -95,7 +95,7 @@ void	server::run(user *sUser, std::vector<pollfd> fds, int fd, int i)
                     }
                 }
             }
-			else
+			else if (!channelName.empty())
 				check_priv(sUser->getBuffer(), fd, this);
 		}
 	}
