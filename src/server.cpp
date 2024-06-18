@@ -85,11 +85,9 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 			std::cout << "CHANNEL NAME = " << channelName << " START = " << start << " BUFF = " << buff << std::endl;
             if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
             {
-				std::cout << "FDSSSS" << std::endl;
                 int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
                 if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || check_valid_command(start))
                 {
-					std::cout << "YHHH" << std::endl;
                     if (timeoutDuration <= 0) {
                         channels[channelName]->users[fd].setTimeStart(0); // Reset timeStart
                     }
@@ -114,7 +112,6 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 			else if (!get_user(buff, this).empty())
 				check_priv(sUser->getBuffer(), fd, this);
 		}
-		std::cout << "Buffer: " << sUser->getBuffer() << std::endl;
 	}
 }
 

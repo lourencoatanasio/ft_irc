@@ -33,6 +33,16 @@ int	check_valid_command(std::string str)
 	return (0);
 }
 
+int	checkInvited(std::vector<std::string> invitedChannels, std::string channel)
+{
+	for (std::vector<std::string>::iterator it = invitedChannels.begin(); it != invitedChannels.end(); it++)
+	{
+		if ((*it).compare(channel) == 0)
+			return (0);
+	}
+	return (1);
+}
+
 void	check_source(int fd, server *server, int ret)
 {
 	if(ret == 0 && (server->users[fd].getNickname().empty() && server->users[fd].getUsername().empty()))
@@ -56,12 +66,11 @@ void	check_channel(char *buf, int fd, server *server)
 	std::string buffer(buf), message, cmd;
 	std::istringstream iss(buffer);
 	iss >> cmd;
+
 	if (cmd.compare("JOIN") == 0) {
 		std::string username = server->users[fd].getUsername();
 		std::string nick = server->users[fd].getNickname();
 		std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
-		if (!channelName.empty())
-			std::cout <<"MAX: " << server->channels[channelName]->getMaxUsers() << " USERS: " << channel_size(server, channelName) << std::endl;
 		std::size_t endPos = channelName.find_first_of("\t\n\r ,");
 		if (endPos != std::string::npos)
 			channelName = channelName.substr(0, endPos);
@@ -87,7 +96,7 @@ void	check_channel(char *buf, int fd, server *server)
 			send_user(fd, message.c_str(), message.size(), 0);
 			return ;
 		}
-		else if (server->channels[channelName]->getInviteMode() == true)
+		else if (checkInvited(server->users[fd].getInvited(), channelName) && server->channels[channelName]->getInviteMode() == true)
 		{
 			std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);

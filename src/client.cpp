@@ -198,7 +198,6 @@ void	user::invite(server *server, char *buf, int fd)
 	std::string command, channel, nameOp;
 	std::istringstream iss2(buf);
 	iss2 >> command >> nameOp >> channel;
-	std::cout <<"OIII" << std::endl;
 	bool userExists = false;
 
 	for (std::size_t i = 0; i < server->users.size(); i++) {
@@ -241,6 +240,7 @@ void	user::invite(server *server, char *buf, int fd)
 		if (server->users[i].getNickname().compare(nameOp) == 0) {
 			std::string message = ":" + this->nickname + "!" + this->username + " INVITE " + nameOp + " " +
 									channel + "\r\n";
+			server->users[i].getInvited().push_back(channel);
 			send_user(server->users[i].getSocket(), message.c_str(), message.size(), 0);
 			message = ":" + channel + " 341 " + this->nickname + " " + nameOp + " " + channel + "\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
