@@ -77,7 +77,7 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	std::string channel = get_channel(buffer);
 
 	size_t messageStartPos = check_message(buf);
-	if (messageStartPos == 0)
+	if (messageStartPos == 0 || channel.empty())
 		return ;
 	for (size_t i = messageStartPos; i < buf.size(); i++)
 	{
@@ -92,7 +92,7 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	if(server->channels[channel]->users[fd].getTimeout() == 1 && caps > total / 2 && server->channels[channel]->users[fd].getTimeStart() == 0)
 	{
 		if(server->channels[channel]->users[fd].getFromNc())
-			send_user(fd, ": BOT :If you keep screaming I'm going to silence you\n", 53, 0);
+			send_user(fd, "BOT :If you keep screaming I'm going to silence you\r\n", 53, 0);
 		else
 		{
 			std::string channelMessage = ":" + server->channels[channel]->users[fd].getNickname() + "!" + server->channels[channel]->users[fd].getUsername() + " PRIVMSG " + channel + " :" + "BOT :If you keep screaming I'm going to silence you" + "\r\n";
@@ -103,7 +103,7 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	{
 		server->channels[channel]->users[fd].setTimeStart(std::time(0));
 		if(server->channels[channel]->users[fd].getFromNc())
-			send_user(fd, "BOT :I warned you\n", 19, 0);
+			send_user(fd, "BOT :I warned you\r\n", 19, 0);
 		else
 		{
 			std::string channelMessage = ":" + server->channels[channel]->users[fd].getNickname() + "!" + server->channels[channel]->users[fd].getUsername() + " PRIVMSG " + channel + " :" + "BOT :I warned you" + "\r\n";
