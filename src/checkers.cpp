@@ -80,11 +80,6 @@ void	check_channel(char *buf, int fd, server *server)
 			send_user(fd, message.c_str(), message.size(), 0);
 			return ;
 		}
-		if (!server->users[fd].invited.empty())
-		{
-			for (std::vector<std::string>::iterator it3 = server->users[fd].invited.begin(); it3 != server->users[fd].invited.end(); it3++)
-				std::cout << "Channel: " << it3->c_str() << std::endl;
-		}
 		if (server->channels.find(channelName) == server->channels.end())
 		{
 			server->channels[channelName] = new channel();
@@ -194,10 +189,7 @@ void check_priv(char *buf, int fd, server *server)
 int	check_valid(std::string buffer)
 {
 	if(buffer.empty())
-	{
-		std::cout << "error 1\n";
 		return (1);
-	}
 	return (0);
 }
 
@@ -206,7 +198,7 @@ int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int f
     std::string buf(buffer);
     if (buf.find("QUIT") != std::string::npos && (buf.find("QUIT") == 0 || buf[buf.find("QUIT") - 1] == '\n'))
 	{
-        std::cout << "Client disconnected in check_leave with fd: " << fd << std::endl;
+        std::cout << RED << "Client disconnected" << NC << std::endl;
         close(fd);
 		fds.erase(fds.begin() + i);
         for (std::map<std::string, channel *>::iterator it = server->channels.begin(); it != server->channels.end(); it++)
@@ -215,7 +207,6 @@ int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int f
 			{
 				std::string message = "PART " + it->first + " :Leaving\n\r";
 				const char *str = message.c_str();
-				std::cout << "str: " << str << std::endl;
 				it->second->users[fd].part(server, str);
 				server->users.erase(fd);
 				return (1);
