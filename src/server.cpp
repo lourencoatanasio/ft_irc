@@ -34,15 +34,21 @@ void    server::disconnect(std::vector<pollfd> &fds, int fd, int i)
 
 std::string get_user(std::string buf, server *server)
 {
-	std::size_t nickStartPos = buf.find("PRIVMSG ") + 8;
-	std::size_t nickEndPos = buf.find(" :", nickStartPos);
-	std::string nick = buf.substr(nickStartPos, nickEndPos - nickStartPos);
-	for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); it++)
+    std::size_t nickStartPos = buf.find("PRIVMSG ") + 8;
+    std::size_t nickEndPos = buf.find(" :", nickStartPos);
+    std::string nick;
+    try {
+        nick = buf.substr(nickStartPos, nickEndPos - nickStartPos);
+    } catch (std::out_of_range& e)
 	{
-		if (it->second.getNickname() == nick)
-			return (nick);
-	}
-	return ("");
+        return "";
+    }
+    for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); it++)
+    {
+        if (it->second.getNickname() == nick)
+            return (nick);
+    }
+    return ("");
 }
 
 void	server::shutDown(std::vector<pollfd> &fds)
@@ -80,15 +86,11 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 				sUser->part(this, sUser->getBuffer());
 				std::string buff = sUser->getBuffer();
 				std::string start = buff.substr(0, buff.find(" "));
-				std::string channelName = get_channel(sUser->getBuffer(), this);
-				if (!channelName.empty() && start != "PART" &&
-					channels[channelName]->users.find(fd) != channels[channelName]->users.end())
+				std::string channelName = user_in_channel(sUser->getBuffer(), this, fd);
+				if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
 				{
-					int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) -
-										   static_cast<int>(std::difftime(std::time(0),
-																		  channels[channelName]->users[fd].getTimeStart())));
-					if (channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 ||
-						check_valid_command(start))
+					int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
+					if (channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || check_valid_command(start))
 					{
 						if (timeoutDuration <= 0)
 							channels[channelName]->users[fd].setTimeStart(0);
@@ -98,16 +100,13 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 					else
 					{
 						std::stringstream ss;
-						ss << "BOT :You're in timeout for " << timeoutDuration
-						   << " seconds. Your message was not sent\n";
+						ss << "BOT :You're in timeout for " << timeoutDuration << " seconds. Your message was not sent\n";
 						std::string message = ss.str();
 						if (sUser->getFromNc())
 							send_user(fd, message.c_str(), message.size(), 0);
 						else
 						{
-							std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" +
-														 channels[channelName]->users[fd].getUsername() + " PRIVMSG " +
-														 channelName + " :" + message + "\r\n";
+							std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" + channels[channelName]->users[fd].getUsername() + " PRIVMSG " + channelName + " :" + message + "\r\n";
 							send_user(fd, channelMessage.c_str(), channelMessage.size(), 0);
 						}
 					}

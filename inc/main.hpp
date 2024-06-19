@@ -61,7 +61,7 @@ void check_still_building(int fd, server *server);
 int	check_valid_command(std::string str);
 int	checkInvited(std::vector<std::string> *invitedChannels, std::string channel);
 int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int fd, int i);
-std::string get_channel(char *buf, server *server);
+std::string user_in_channel(char *buf, server *server, int fd);
 size_t check_message(std::string buffer);
 void	bot_timeout(server *server, char *buffer, int fd);
 std::string get_user(std::string buf, server *server);

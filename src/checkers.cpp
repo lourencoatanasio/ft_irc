@@ -141,7 +141,7 @@ void check_priv(char *buf, int fd, server *server)
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
-			if (server->channels[channel]->users[fd].getSocket() <= 0)
+			if (server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
 			{
 				std::string message = ": 404 " + nick + " " + channel + " :Cannot send to channel\r\n";
 				send_user(fd, message.c_str(), message.size(), 0);

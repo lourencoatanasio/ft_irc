@@ -23,7 +23,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	send_user(newPfd.fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
 }
 
-std::string get_channel(char *buf, server *server)
+std::string user_in_channel(char *buf, server *server, int fd)
 {
 	std::string buffer(buf);
 	std::size_t channelStartPos = buffer.find("#");
@@ -33,11 +33,11 @@ std::string get_channel(char *buf, server *server)
 	{
 		std::string channelName = buffer.substr(channelStartPos);
 		std::size_t channelEndPos = channelName.find_first_of("\t\n\r ");
-        for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); ++it)
-        {
-            if (it->first == channelName.substr(0, channelEndPos))
-                return (channelName.substr(0, channelEndPos));
-        }
+		for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); ++it)
+		{
+			if (it->first == channelName.substr(0, channelEndPos) && it->second->users.find(fd) != it->second->users.end())
+				return (channelName.substr(0, channelEndPos));
+		}
 		return ("");
 	}
 }
@@ -49,9 +49,10 @@ void	bot_timeout(server *server, char *buffer, int fd)
 	int caps = 0;
 	int total = 0;
 
-	std::string channel = get_channel(buffer, server);
+	std::string channel = user_in_channel(buffer, server, fd);
 
 	size_t messageStartPos = check_message(buf);
+
 	if (messageStartPos == 0 || channel.empty())
 		return ;
 	for (size_t i = messageStartPos; i < buf.size(); i++)
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
 			check_source(fds[i].fd, server, ret);
 			if (fds[i].revents & POLLIN)
 			{
-				std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE);
+				std::memset(server->users[fds[i].fd].getBuffer(), 0, BUFFER_SIZE + 1);
 				int bytesRead = recv(fds[i].fd, server->users[fds[i].fd].getBuffer(), BUFFER_SIZE, 0);
 				check_still_building(fds[i].fd, server);
 				if (bytesRead == -1)

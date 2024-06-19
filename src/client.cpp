@@ -164,8 +164,7 @@ void	user::mode(server *server, char *buf, int fd)
 	}
 }
 
-void	user::kick(server *server, char *buf, int fd)
-{
+void    user::kick(server *server, char *buf, int fd) {
 	std::string command, channel, flag, nameOp;
 	std::istringstream iss2(buf);
 	iss2 >> command >> channel >> flag >> nameOp;
@@ -174,22 +173,21 @@ void	user::kick(server *server, char *buf, int fd)
 	std::size_t endPos = nameOp.find_first_of("\t\n\r ");
 	if (endPos != std::string::npos)
 		nameOp = nameOp.substr(0, endPos);
-	if (server->channels.find(channel) != server->channels.end())
-	{
-		for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++)
-		{
+	if (nameOp[0] == ':')
+		nameOp.erase(0, 1);
+	if (nameOp.empty())
+		nameOp = this->nickname;
+	if (server->channels.find(channel) != server->channels.end()) {
+		for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
 			std::string u = server->channels[channel]->users[i].getUsername();
 			std::string n = server->channels[channel]->users[i].getNickname();
-			if (u.compare(nameOp) == 0 || n.compare(nameOp) == 0)
-			{
-				std::string message =
-						":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
-						this->nickname + "\r\n";
-				for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
-					send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
-				server->channels[channel]->users.erase(i);
-				break;
-			}
+			std::string message =
+					":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
+					nameOp + "\r\n";
+			for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
+				send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
+			server->channels[channel]->users.erase(i);
+			break;
 		}
 	}
 }
