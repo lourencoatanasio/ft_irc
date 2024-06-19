@@ -84,7 +84,8 @@ void	get_username_hex(char *buf, int fd, server *server)
 	std::string buffer(buf);
 	if (buffer.find("USER") != std::string::npos && (buffer.find("USER") == 0 || buffer[buffer.find("USER") - 1] == '\n'))
 	{
-		if (server->users[fd].getUsername().empty()) {
+		if (server->users[fd].getUsername().empty())
+		{
 			std::string username = buffer.substr(buffer.find("USER") + 5);
 			username = username.substr(0, username.find("* :realname") - 2);
 			while(username[username.size() - 1] == ' ' || username[username.size() - 1] == '\t')
@@ -153,7 +154,6 @@ void	get_nickname_hex(char *buf, int fd, server *server)
 		server->users[fd].setNickname(nick);
 		if (!oldNick.empty() || server->users[fd].flag == 1)
 			send_user(fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
-		// write a message to send the user just so the client knows what nick the server has set it to
 		server->users[fd].setStatus(2);
 	}
 	else if(server->users[fd].getNickname().empty())

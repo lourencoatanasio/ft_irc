@@ -13,9 +13,7 @@ ssize_t	send_user(int socket, const void *buffer, size_t length, int flags)
 	{
 		ssize_t sentBytes = send(socket, bufferPtr + totalSentBytes, length - totalSentBytes, flags);
 		if (sentBytes == -1)
-		{
-			return -1; // Return -1 on failure, caller will check errno
-		}
+			return -1;
 
 		totalSentBytes += sentBytes;
 	}
@@ -28,9 +26,7 @@ ssize_t	send_all(server *server, const void *buffer, size_t lenght, int flags, s
 	ssize_t totalSentBytes = 0;
 
 	for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
-	{
 		totalSentBytes += send_user(server->channels[channel]->users[j].getSocket(), buffer, lenght, flags);
-	}
 	return (totalSentBytes);
 }
 
@@ -52,7 +48,5 @@ void	channel_send(server *server, std::string nick, std::string username, std::s
 	v.push_back(": 315 " + nick + " " + channelName + " :End of /WHO list.\r\n");
 
 	for (size_t i = 1; i < v.size(); i++)
-	{
 		send_user(fd, v[i].c_str(), v[i].size(), 0);
-	}
 }

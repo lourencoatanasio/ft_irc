@@ -18,10 +18,7 @@ class server
     public:
         server(char *password, char *port);
         ~server();
-        void connect(); // Not sure if this is needed
-        void send(); // Not sure if this is needed
-        void receive(); // Not sure if this is needed
-        void disconnect(); // Not sure if this is needed
+        void send();
         int socket_id;
         std::map<std::string, channel*> channels;
         std::map<int, user> users;

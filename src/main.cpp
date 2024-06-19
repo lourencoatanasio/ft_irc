@@ -18,7 +18,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	newPfd.revents = 0;
 	fds.push_back(newPfd);
 	fds[0].revents = 0;
-	std::cout << "New client connected with fd: " << newClientSocket << std::endl;
+	std::cout << GREEN << "New client connected" << NC << std::endl;
 	send_user(newPfd.fd, "Welcome to the server!\n", 23, 0);
 	send_user(newPfd.fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
 }
@@ -26,7 +26,6 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 std::string get_channel(char *buf, server *server)
 {
 	std::string buffer(buf);
-	// channel = first # found in buffer
 	std::size_t channelStartPos = buffer.find("#");
 	if (channelStartPos == std::string::npos)
 		return ("");
@@ -41,36 +40,6 @@ std::string get_channel(char *buf, server *server)
         }
 		return ("");
 	}
-}
-
-void delete_user(server *server, int fd)
-{
-	std::string nick = server->users[fd].getNickname();
-	std::string username = server->users[fd].getUsername();
-	std::string message = ":" + nick + "!" + username + " QUIT :Client disconnected\r\n";
-	for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); ++it)
-	{
-		if (it->first != fd)
-			send_user(it->first, message.c_str(), message.size(), 0);
-	}
-	close(fd);
-
-	// Iterate over all channels
-	for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); ++it)
-	{
-		// Get the map of users in the current channel
-		std::map<int, user>& usersInChannel = it->second->users;
-
-		// Check if the user is in the current channel
-		if (usersInChannel.find(fd) != usersInChannel.end())
-		{
-			// Remove the user from the channel
-			usersInChannel.erase(fd);
-		}
-	}
-
-	// Remove the user from the server's user map
-	server->users.erase(fd);
 }
 
 void	bot_timeout(server *server, char *buffer, int fd)
@@ -130,17 +99,18 @@ int main(int argc, char **argv)
 		std::cout << "Error: Proper use is <./ft_irc <port> <password>\n";
 		return (1);
 	}
-	server serverT(argv[2], argv[1]); // Create a server object
-	server *server = &serverT; // Create a pointer to the server object
+	server serverT(argv[2], argv[1]);
+	server *server = &serverT;
 	std::vector<pollfd> fds;
 
+	std::cout << GREEN << "Server booting up" << NC << std::endl;
 	pollfd serverPfd;
-	serverPfd.fd = server->socket_id; // Use the -> operator to access members of the object pointed to by the pointer
+	serverPfd.fd = server->socket_id;
 	serverPfd.events = POLLIN;
 	serverPfd.revents = 0;
 	fds.push_back(serverPfd);
 
-	while (true) // Main server loop
+	while (true)
 	{
 		sigHandler();
 

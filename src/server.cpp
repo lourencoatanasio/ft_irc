@@ -18,7 +18,7 @@ int check_valid_port(char *port)
 
 void    server::disconnect(std::vector<pollfd> &fds, int fd, int i)
 {
-    std::cout << "Client disconnected with fd: " << fd << std::endl;
+    std::cout<< RED << "Client disconnected" << NC << std::endl;
     close(fd);
     fds.erase(fds.begin() + i);
     for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
@@ -32,11 +32,13 @@ void    server::disconnect(std::vector<pollfd> &fds, int fd, int i)
     }
 }
 
-std::string get_user(std::string buf, server *server) {
+std::string get_user(std::string buf, server *server)
+{
 	std::size_t nickStartPos = buf.find("PRIVMSG ") + 8;
 	std::size_t nickEndPos = buf.find(" :", nickStartPos);
 	std::string nick = buf.substr(nickStartPos, nickEndPos - nickStartPos);
-	for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); it++) {
+	for (std::map<int, user>::iterator it = server->users.begin(); it != server->users.end(); it++)
+	{
 		if (it->second.getNickname() == nick)
 			return (nick);
 	}
@@ -46,15 +48,11 @@ std::string get_user(std::string buf, server *server) {
 void	server::shutDown(std::vector<pollfd> &fds)
 {
 	for (size_t i = 1; i < fds.size(); i++)
-	{
 		close(fds[i].fd);
-	}
 	close(socket_id);
 	for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++)
-	{
 		delete it->second;
-	}
-	std::cout << "Server shutting down" << std::endl;
+	std::cout << RED << "\nServer shutting down" << NC << std::endl;
 }
 
 void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
@@ -83,8 +81,6 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 				std::string buff = sUser->getBuffer();
 				std::string start = buff.substr(0, buff.find(" "));
 				std::string channelName = get_channel(sUser->getBuffer(), this);
-				std::cout << "CHANNEL NAME = " << channelName << " START = " << start << " BUFF = " << buff
-						  << std::endl;
 				if (!channelName.empty() && start != "PART" &&
 					channels[channelName]->users.find(fd) != channels[channelName]->users.end())
 				{
@@ -95,9 +91,7 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 						check_valid_command(start))
 					{
 						if (timeoutDuration <= 0)
-						{
-							channels[channelName]->users[fd].setTimeStart(0); // Reset timeStart
-						}
+							channels[channelName]->users[fd].setTimeStart(0);
 						check_priv(sUser->getBuffer(), fd, this);
 						sUser->check_operator(sUser->getBuffer(), fd, this);
 					}
@@ -111,7 +105,6 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 							send_user(fd, message.c_str(), message.size(), 0);
 						else
 						{
-							// get the fd from the sUser on the current channel
 							std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" +
 														 channels[channelName]->users[fd].getUsername() + " PRIVMSG " +
 														 channelName + " :" + message + "\r\n";
@@ -144,7 +137,8 @@ server::server(char *password, char *port)
         close(socket_id);
         exit(EXIT_FAILURE);
     }
-    if (this->socket_id == -1) {
+    if (this->socket_id == -1)
+	{
         std::cerr << "Can't create a socket!";
         exit(EXIT_FAILURE);
     }
@@ -152,12 +146,14 @@ server::server(char *password, char *port)
     fcntl(socket_id, F_SETFL, O_NONBLOCK);
 
     this->IP.sin_family = AF_INET;
-    if (inet_pton(AF_INET, this->server_ip, &this->IP.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, this->server_ip, &this->IP.sin_addr) <= 0)
+	{
         std::cerr << "Invalid address/Address not supported\n";
         exit(EXIT_FAILURE);
     }
     this->IP.sin_port = htons(PORT);
-    if (bind(this->socket_id, (sockaddr * ) & this->IP, sizeof(this->IP)) == -1) {
+    if (bind(this->socket_id, (sockaddr * ) & this->IP, sizeof(this->IP)) == -1)
+	{
         std::cerr << "Can't bind to IP/port";
         exit(EXIT_FAILURE);
     }

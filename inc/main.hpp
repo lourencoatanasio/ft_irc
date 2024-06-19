@@ -64,6 +64,5 @@ int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int f
 std::string get_channel(char *buf, server *server);
 size_t check_message(std::string buffer);
 void	bot_timeout(server *server, char *buffer, int fd);
-void delete_user(server *server, int fd);
 std::string get_user(std::string buf, server *server);
 int channel_size(server *server, std::string channel);

@@ -33,7 +33,6 @@ class user
 		void setFromNc(int newFromnc) { from_nc = newFromnc; }
 		int getFromNc() { return from_nc; }
         void setOpStatus(bool status) { isOp = status; }
-		//		std::vector<std::string>	*getInvited() { return invited; }
 		void	check_operator(char *buf, int fd, server *server);
 		void	modeOperator(server *server, user &newOp, std::string flag, std::string channel);
 		int		modeInvite(server *server, std::string flag, std::string channel);
