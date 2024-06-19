@@ -64,15 +64,17 @@ void	check_still_building(int fd, server *server)
 
 void	check_channel(char *buf, int fd, server *server)
 {
-	std::string buffer(buf), message, cmd;
+	std::string buffer(buf), message, cmd, pass, buf2;
 	std::istringstream iss(buffer);
-	iss >> cmd;
+	iss >> cmd >> buf2 >> pass;
 
 	if (cmd.compare("JOIN") == 0) {
 		std::string username = server->users[fd].getUsername();
 		std::string nick = server->users[fd].getNickname();
 		std::string channelName = buffer.substr(buffer.find("JOIN") + 5);
 		std::size_t endPos = channelName.find_first_of("\t\n\r ,");
+		pass = pass.substr(0, pass.find_last_not_of("\n\r") + 1);
+		std::cout << GREEN "pass: |" << pass << "|" << NC "\n";
 		if (endPos != std::string::npos)
 			channelName = channelName.substr(0, endPos);
 		if(channelName[0] != '#' || channelName.size() > 200)
@@ -83,10 +85,13 @@ void	check_channel(char *buf, int fd, server *server)
 		}
 		if (!server->users[fd].invited.empty()) {
 			std::cout << "Is invited: " << checkInvited(server->users[fd].invited, channelName) << std::endl;
-			for (std::vector<std::string>::iterator it3 = server->users[fd].invited.begin(); it3 != server->users[fd].invited.end(); it3++) {
+			for (std::vector<std::string>::iterator it3 = server->users[fd].invited.begin();
+				 it3 != server->users[fd].invited.end(); it3++) {
 				std::cout << "Channel: " << it3->c_str() << std::endl;
 			}
 		}
+//		if (!server->channels[channelName]->empty())
+//			std::cout << YELLOW "getPass: " << server->channels[channelName]->getPassword() << NC "\n";
 		if (server->channels.find(channelName) == server->channels.end())
 		{
 			std::cout << "Creating channel " << channelName << std::endl;
@@ -105,8 +110,15 @@ void	check_channel(char *buf, int fd, server *server)
 		}
 		else if (checkInvited(server->users[fd].invited, channelName) && server->channels[channelName]->getInviteMode() == true)
 		{
-			std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
+			message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
+			return ;
+		}
+		else if ((!server->channels[channelName]->getPassword().empty() && server->channels[channelName]->getPassword().compare(pass) != 0) && !channelName.empty())
+		{
+			message = ": 475 " + nick + " " + channelName + " :Requires keyword\r\n";
+			send_user(fd, message.c_str(), message.size(), 0);
+			std::cout << YELLOW "getPass: |" << server->channels[channelName]->getPassword() << "|" << NC "\n";
 			return ;
 		}
 		else

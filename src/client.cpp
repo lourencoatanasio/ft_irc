@@ -76,7 +76,7 @@ void	user::modeOperator(server *server, user &newOp, std::string channel, std::s
 	}
 	else
 		return ;
-	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + " " + newOp.getUsername() + "\r\n";
+	std::string message = ":" + this->nickname + "!" + this->username + " MODE " + channel + " " + flag + " " + newOp.getNickname() + "\r\n";
 	send_all(server, message.c_str(), message.size(), 0, channel);
 }
 
@@ -374,45 +374,48 @@ void	user::part(server *server, const char *buf)
 	{
 		for (std::map<int, user>::iterator it = server->channels[channelName]->users.begin(); it != server->channels[channelName]->users.end(); it++)
 		{	
-			if (it->second.getNickname() == this->nickname) {
-				if (server->channels[channelName]->users[it->first].isOp) {
+			if (it->second.getNickname() == this->nickname)
+			{
+				if (server->channels[channelName]->users[it->first].isOp)
+				{
 					server->channels[channelName]->setOps(server->channels[channelName]->getOps() - 1);
-					if (server->channels[channelName]->getOps() == 0) {
+					if (server->channels[channelName]->getOps() == 0)
+					{
 						for (std::map<int, user>::iterator it2 = server->channels[channelName]->users.begin();
 							it2 != server->channels[channelName]->users.end(); ++it2) {
-							if (it2->second.getNickname() != this->nickname && it2->second.isOp == false &&
-								!it2->second.getNickname().empty()) {
+							if (it2->second.getNickname() != this->nickname && it2->second.isOp == false && !it2->second.getNickname().empty())
+							{
 								it2->second.setOpStatus(true);
 								server->channels[channelName]->setOps(server->channels[channelName]->getOps() + 1);
-								message = ":" + this->nickname + "!" + this->username + " MODE " + channelName + " " +
-											"+o" + " " + it2->second.getNickname() + "\r\n";
+								message = ":" + this->nickname + "!" + this->username + " MODE " + channelName + " " + "+o" + " " + it2->second.getNickname() + "\r\n";
 								send_all(server, message.c_str(), message.size(), 0, channelName);
-								message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " +
-											reason + "\r\n";
+								message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 								send_all(server, message.c_str(), message.size(), 0, channelName);
 								server->channels[channelName]->users.erase(it);
 								return ;
 							}
 						}
-						if (channel_size(server, channelName) == 1) {
-							message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
-									  "\r\n";
+						if (channel_size(server, channelName) == 1)
+						{
+							message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 							send_all(server, message.c_str(), message.size(), 0, channelName);
 							server->channels[channelName]->users.erase(it);
 							delete server->channels[channelName];
 							server->channels.erase(channelName);
 							return ;
 						}
-					} else {
-						message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
-								  "\r\n";
+					}
+					else
+					{
+						message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 						send_all(server, message.c_str(), message.size(), 0, channelName);
 						server->channels[channelName]->users.erase(it);
 						return ;
 					}
-				} else {
-					message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason +
-							  "\r\n";
+				}
+				else
+				{
+					message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 					send_all(server, message.c_str(), message.size(), 0, channelName);
 					server->channels[channelName]->users.erase(it);
 					return ;
