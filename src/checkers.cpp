@@ -35,10 +35,11 @@ int	check_valid_command(std::string str)
 
 int	checkInvited(std::vector<std::string> invitedChannels, std::string channel)
 {
-	for (std::vector<std::string>::iterator it = invitedChannels.begin(); it != invitedChannels.end(); it++)
-	{
-		if ((*it).compare(channel) == 0)
-			return (0);
+	if (invitedChannels.empty() == false) {
+		for (std::vector<std::string>::iterator it = invitedChannels.begin(); it != invitedChannels.end(); it++) {
+			if ((*it).compare(channel) == 0)
+				return (0);
+		}
 	}
 	return (1);
 }
@@ -80,6 +81,12 @@ void	check_channel(char *buf, int fd, server *server)
 			send_user(fd, message.c_str(), message.size(), 0);
 			return ;
 		}
+		if (!server->users[fd].invited.empty()) {
+			std::cout << "Is invited: " << checkInvited(server->users[fd].invited, channelName) << std::endl;
+			for (std::vector<std::string>::iterator it3 = server->users[fd].invited.begin(); it3 != server->users[fd].invited.end(); it3++) {
+				std::cout << "Channel: " << it3->c_str() << std::endl;
+			}
+		}
 		if (server->channels.find(channelName) == server->channels.end())
 		{
 			std::cout << "Creating channel " << channelName << std::endl;
@@ -96,7 +103,7 @@ void	check_channel(char *buf, int fd, server *server)
 			send_user(fd, message.c_str(), message.size(), 0);
 			return ;
 		}
-		else if (checkInvited(server->users[fd].getInvited(), channelName) && server->channels[channelName]->getInviteMode() == true)
+		else if (checkInvited(server->users[fd].invited, channelName) && server->channels[channelName]->getInviteMode() == true)
 		{
 			std::string message = ": 473 " + nick + " " + channelName + " :Cannot join channel (+i)\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);
@@ -104,6 +111,9 @@ void	check_channel(char *buf, int fd, server *server)
 		}
 		else
 			server->channels[channelName]->users[fd] = server->users[fd];
+		std::vector<std::string>::iterator it = std::find(server->users[fd].invited.begin(), server->users[fd].invited.end(), channelName);
+		if (it != server->users[fd].invited.end())
+			server->users[fd].invited.erase(it);
 		message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
 		send_all(server, message.c_str(), message.size(), 0, channelName);
 		channel_send(server, nick, username, channelName, fd);
@@ -183,18 +193,22 @@ int	check_valid(std::string buffer)
 	return (0);
 }
 
-void    check_leave(server *server, char *buffer, int fd) {
+int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int fd, int i) {
     std::string buf(buffer);
     if (buf.find("QUIT") != std::string::npos && (buf.find("QUIT") == 0 || buf[buf.find("QUIT") - 1] == '\n')) {
-        std::cout << "Client disconnected" << std::endl;
+        std::cout << "Client disconnected in check_leave with fd: " << fd << std::endl;
         close(fd);
+		fds.erase(fds.begin() + i);
         for (std::map<std::string, channel *>::iterator it = server->channels.begin(); it != server->channels.end(); it++) {
             if (it->second->users.find(fd) != it->second->users.end()) {
-                std::string message = "PART " + it->first + " :Leaving\n\r";
-                const char *str = message.c_str();
-                it->second->users[fd].part(server, str);
-                break;
+				std::string message = "PART " + it->first + " :Leaving\n\r";
+				const char *str = message.c_str();
+				std::cout << "str: " << str << std::endl;
+				it->second->users[fd].part(server, str);
+				server->users.erase(fd);
+				return (1);
             }
         }
     }
+	return (0);
 }

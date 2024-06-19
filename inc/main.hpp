@@ -26,6 +26,7 @@
 #include "server.hpp"
 #include <csignal>
 #include <ctime>
+#include <algorithm>
 
 #define NC "\033[0m"
 #define RED "\033[0;31m"
@@ -58,8 +59,8 @@ void check_priv(char *buf, int fd, server *server);
 void check_source(int fd, server *server, int ret);
 void check_still_building(int fd, server *server);
 int	check_valid_command(std::string str);
-int	checkInvited(std::vector<std::string> invitedChannels, std::string channel);
-void	check_leave(server *server, char *buffer, int fd);
+int	checkInvited(std::vector<std::string> *invitedChannels, std::string channel);
+int    check_leave(std::vector<pollfd> &fds, server *server, char *buffer, int fd, int i);
 std::string get_channel(char *buf, server *server);
 size_t check_message(std::string buffer);
 void bot_timeout(server *server, char *buffer, int fd);

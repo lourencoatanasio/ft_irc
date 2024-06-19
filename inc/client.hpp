@@ -19,7 +19,7 @@ class user
 		std::memset(buffer, 0, BUFFER_SIZE);
 	}
         ~user();
-        int clientSocket;
+	int clientSocket;
         std::string getNickname() { return nickname; }
         std::string getOldNick() { return oldNick; }
         std::string getUsername() { return username; }
@@ -33,7 +33,7 @@ class user
 		void setFromNc(int newFromnc) { from_nc = newFromnc; }
 		int getFromNc() { return from_nc; }
         void setOpStatus(bool status) { isOp = status; }
-		std::vector<std::string>	getInvited() { return invited; }
+		//		std::vector<std::string>	*getInvited() { return invited; }
 		void	check_operator(char *buf, int fd, server *server);
 		void	modeOperator(server *server, user &newOp, std::string flag, std::string channel);
 		int		modeInvite(server *server, std::string flag, std::string channel);
@@ -59,8 +59,8 @@ class user
         int		flag;
 		void	setTimeStart(time_t newTime) { time_start = newTime; }
 		time_t	getTimeStart() { return time_start; }
-    protected:
 		std::vector<std::string> invited;
+protected:
 		int timeout;
         int status;
 		int from_nc;

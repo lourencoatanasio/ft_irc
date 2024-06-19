@@ -18,6 +18,7 @@ void	get_new_user(server *server, std::vector<pollfd> &fds)
 	newPfd.revents = 0;
 	fds.push_back(newPfd);
 	fds[0].revents = 0;
+	std::cout << "New client connected with fd: " << newClientSocket << std::endl;
 	send_user(newPfd.fd, "Welcome to the server!\n", 23, 0);
 	send_user(newPfd.fd, "Please enter the server password: /PASS <password>\r\n", 52, 0);
 }

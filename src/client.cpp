@@ -23,6 +23,7 @@ user::user(int newSocket)
 	timeout = 0;
 	time_start = 0;
 	current_time = 0;
+	invited.clear();
 	std::cout << "New client connected" << std::endl;
 }
 
@@ -240,7 +241,7 @@ void	user::invite(server *server, char *buf, int fd)
 		if (server->users[i].getNickname().compare(nameOp) == 0) {
 			std::string message = ":" + this->nickname + "!" + this->username + " INVITE " + nameOp + " " +
 									channel + "\r\n";
-			server->users[i].getInvited().push_back(channel);
+			server->users[i].invited.push_back(channel);
 			send_user(server->users[i].getSocket(), message.c_str(), message.size(), 0);
 			message = ":" + channel + " 341 " + this->nickname + " " + nameOp + " " + channel + "\r\n";
 			send_user(fd, message.c_str(), message.size(), 0);

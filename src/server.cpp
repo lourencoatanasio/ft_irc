@@ -18,7 +18,7 @@ int check_valid_port(char *port)
 
 void    server::disconnect(std::vector<pollfd> &fds, int fd, int i)
 {
-    std::cout << "Client disconnected" << std::endl;
+    std::cout << "Client disconnected with fd: " << fd << std::endl;
     close(fd);
     fds.erase(fds.begin() + i);
     for (std::map<std::string, channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
@@ -71,46 +71,57 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 	}
 	if(sUser->getStillBuilding() == 0)
 	{
-		check_leave(this, sUser->getBuffer(), fd);
-		login(i, this, fds, sUser->getBuffer());
-		if (sUser->getStatus() == 4)
+		if (!check_leave(fds, this, sUser->getBuffer(), fd, i))
 		{
-			bot_timeout(this, sUser->getBuffer(), fd);
-			sUser->change_nick(sUser->getBuffer(), fd, this);
-			check_channel(sUser->getBuffer(), fd, this);
-			sUser->part(this, sUser->getBuffer());
-            std::string buff = sUser->getBuffer();
-            std::string start = buff.substr(0, buff.find(" "));
-            std::string channelName = get_channel(sUser->getBuffer(), this);
-			std::cout << "CHANNEL NAME = " << channelName << " START = " << start << " BUFF = " << buff << std::endl;
-            if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
-            {
-                int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));
-                if(channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 || check_valid_command(start))
-                {
-                    if (timeoutDuration <= 0) {
-                        channels[channelName]->users[fd].setTimeStart(0); // Reset timeStart
-                    }
-                    check_priv(sUser->getBuffer(), fd, this);
-                    sUser->check_operator(sUser->getBuffer(), fd, this);
-                }
-                else
-                {
-                    std::stringstream ss;
-                    ss << "BOT :You're in timeout for " << timeoutDuration << " seconds. Your message was not sent\n";
-                    std::string message = ss.str();
-                    if(sUser->getFromNc())
-                        send_user(fd, message.c_str(), message.size(), 0);
-                    else
-                    {
-                        // get the fd from the sUser on the current channel
-                        std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" + channels[channelName]->users[fd].getUsername() + " PRIVMSG " + channelName + " :" + message + "\r\n";
-                        send_user(fd, channelMessage.c_str(), channelMessage.size(), 0);
-                    }
-                }
-            }
-			else if (!get_user(buff, this).empty())
-				check_priv(sUser->getBuffer(), fd, this);
+			login(i, this, fds, sUser->getBuffer());
+			if (sUser->getStatus() == 4)
+			{
+				bot_timeout(this, sUser->getBuffer(), fd);
+				sUser->change_nick(sUser->getBuffer(), fd, this);
+				check_channel(sUser->getBuffer(), fd, this);
+				sUser->part(this, sUser->getBuffer());
+				std::string buff = sUser->getBuffer();
+				std::string start = buff.substr(0, buff.find(" "));
+				std::string channelName = get_channel(sUser->getBuffer(), this);
+				std::cout << "CHANNEL NAME = " << channelName << " START = " << start << " BUFF = " << buff
+						  << std::endl;
+				if (!channelName.empty() && start != "PART" &&
+					channels[channelName]->users.find(fd) != channels[channelName]->users.end())
+				{
+					int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) -
+										   static_cast<int>(std::difftime(std::time(0),
+																		  channels[channelName]->users[fd].getTimeStart())));
+					if (channels[channelName]->users[fd].getTimeStart() == 0 || timeoutDuration <= 0 ||
+						check_valid_command(start))
+					{
+						if (timeoutDuration <= 0)
+						{
+							channels[channelName]->users[fd].setTimeStart(0); // Reset timeStart
+						}
+						check_priv(sUser->getBuffer(), fd, this);
+						sUser->check_operator(sUser->getBuffer(), fd, this);
+					}
+					else
+					{
+						std::stringstream ss;
+						ss << "BOT :You're in timeout for " << timeoutDuration
+						   << " seconds. Your message was not sent\n";
+						std::string message = ss.str();
+						if (sUser->getFromNc())
+							send_user(fd, message.c_str(), message.size(), 0);
+						else
+						{
+							// get the fd from the sUser on the current channel
+							std::string channelMessage = ":" + channels[channelName]->users[fd].getNickname() + "!" +
+														 channels[channelName]->users[fd].getUsername() + " PRIVMSG " +
+														 channelName + " :" + message + "\r\n";
+							send_user(fd, channelMessage.c_str(), channelMessage.size(), 0);
+						}
+					}
+				}
+				else if (!get_user(buff, this).empty())
+					check_priv(sUser->getBuffer(), fd, this);
+			}
 		}
 	}
 }
