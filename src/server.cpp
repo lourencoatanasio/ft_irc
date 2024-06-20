@@ -61,6 +61,22 @@ void	server::shutDown(std::vector<pollfd> &fds)
 	std::cout << RED << "\nServer shutting down" << NC << std::endl;
 }
 
+std::string get_channel(char *buf, server *server)
+{
+    std::string buffer(buf);
+    std::size_t channelStartPos = buffer.find("#");
+    if (channelStartPos == std::string::npos)
+        return ("");
+    else
+    {
+        std::string channelName = buffer.substr(channelStartPos);
+        std::size_t channelEndPos = channelName.find_first_of("\t\n\r ");
+        if (server->channels.find(channelName.substr(0, channelEndPos)) != server->channels.end())
+                return (channelName.substr(0, channelEndPos));
+        return ("");
+    }
+}
+
 void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 {
 	if(sUser->getStillBuilding() == 1)
@@ -86,7 +102,7 @@ void	server::run(user *sUser, std::vector<pollfd> &fds, int fd, int i)
 				sUser->part(this, sUser->getBuffer());
 				std::string buff = sUser->getBuffer();
 				std::string start = buff.substr(0, buff.find(" "));
-				std::string channelName = user_in_channel(sUser->getBuffer(), this, fd);
+				std::string channelName = get_channel(sUser->getBuffer(), this);
 				if (!channelName.empty() && start != "PART" && channels[channelName]->users.find(fd) != channels[channelName]->users.end())
 				{
 					int timeoutDuration = ((30 * (channels[channelName]->users[fd].getTimeout() - 1)) - static_cast<int>(std::difftime(std::time(0), channels[channelName]->users[fd].getTimeStart())));

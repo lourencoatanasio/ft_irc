@@ -33,11 +33,11 @@ std::string user_in_channel(char *buf, server *server, int fd)
 	{
 		std::string channelName = buffer.substr(channelStartPos);
 		std::size_t channelEndPos = channelName.find_first_of("\t\n\r ");
-		for (std::map<std::string, channel*>::iterator it = server->channels.begin(); it != server->channels.end(); ++it)
-		{
-			if (it->first == channelName.substr(0, channelEndPos) && it->second->users.find(fd) != it->second->users.end())
-				return (channelName.substr(0, channelEndPos));
-		}
+        if (server->channels.find(channelName.substr(0, channelEndPos)) != server->channels.end())
+        {
+            if (!server->channels[channelName.substr(0, channelEndPos)]->users.find(fd)->second.getNickname().empty())
+                return (channelName.substr(0, channelEndPos));
+        }
 		return ("");
 	}
 }

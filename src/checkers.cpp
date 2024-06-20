@@ -59,6 +59,17 @@ void	check_still_building(int fd, server *server)
 		server->users[fd].setStillBuilding(1);
 }
 
+void show_users_in_channel(server *server, std::string channel)
+{
+    std::cout << "Users in channel " << channel << std::endl;
+    int i = 0;
+    for (std::map<int, user>::iterator it = server->channels[channel]->users.begin(); it != server->channels[channel]->users.end(); it++)
+    {
+        std::cout << it->second.getNickname() << " i = " << i << std::endl;
+        i++;
+    }
+}
+
 void	check_channel(char *buf, int fd, server *server)
 {
 	std::string buffer(buf), message, cmd, pass, buf2;
@@ -141,7 +152,9 @@ void check_priv(char *buf, int fd, server *server)
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
-			if (server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
+            show_users_in_channel(server, channel);
+            std::cout << RED << "FD: " << fd << NC << std::endl;
+			if (server->channels[channel]->users.find(fd)->second.getNickname().empty() || server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
 			{
 				std::string message = ": 404 " + nick + " " + channel + " :Cannot send to channel\r\n";
 				send_user(fd, message.c_str(), message.size(), 0);
