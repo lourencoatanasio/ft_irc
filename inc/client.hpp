@@ -59,6 +59,8 @@ class user
 		void	setTimeStart(time_t newTime) { time_start = newTime; }
 		time_t	getTimeStart() { return time_start; }
 		std::vector<std::string> invited;
+		std::map<std::string, std::pair<int, int> > timeouts;
+
 protected:
 		int timeout;
         int status;

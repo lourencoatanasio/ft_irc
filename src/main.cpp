@@ -61,11 +61,11 @@ void	bot_timeout(server *server, char *buffer, int fd)
 			caps++;
 		total++;
 	}
-	if (caps > total / 2 && server->channels[channel]->users[fd].getTimeStart() == 0)
+	if (caps > total / 2 && server->users[fd].timeouts[channel].first == 0)
 	{
-		server->channels[channel]->users[fd].setTimeout(server->channels[channel]->users[fd].getTimeout() + 1);
+		server->users[fd].timeouts[channel].second = server->users[fd].timeouts[channel].second + 1;
 	}
-	if(server->channels[channel]->users[fd].getTimeout() == 1 && caps > total / 2 && server->channels[channel]->users[fd].getTimeStart() == 0)
+	if(server->users[fd].timeouts[channel].second == 1 && caps > total / 2 && server->users[fd].timeouts[channel].first == 0)
 	{
 		if(server->channels[channel]->users[fd].getFromNc())
 			send_user(fd, "BOT :If you keep screaming I'm going to silence you\r\n", 53, 0);
@@ -75,9 +75,9 @@ void	bot_timeout(server *server, char *buffer, int fd)
 			send_user(fd, channelMessage.c_str(), channelMessage.size(), 0);
 		}
 	}
-	else if(server->channels[channel]->users[fd].getTimeout() > 1 && caps > total / 2 && server->channels[channel]->users[fd].getTimeStart() == 0)
+	else if(server->users[fd].timeouts[channel].second > 1 && caps > total / 2 && server->users[fd].timeouts[channel].first == 0)
 	{
-		server->channels[channel]->users[fd].setTimeStart(std::time(0));
+		server->users[fd].timeouts[channel].first = std::time(0);
 		if(server->channels[channel]->users[fd].getFromNc())
 			send_user(fd, "BOT :I warned you\r\n", 19, 0);
 		else
@@ -87,9 +87,9 @@ void	bot_timeout(server *server, char *buffer, int fd)
 		}
 		return ;
 	}
-	if (std::difftime(std::time(0), server->channels[channel]->users[fd].getTimeStart()) > timeout_time * (server->channels[channel]->users[fd].getTimeout() - 1))
+	if (std::difftime(std::time(0), server->users[fd].timeouts[channel].first) > timeout_time * (server->users[fd].timeouts[channel].second - 1))
 	{
-		server->channels[channel]->users[fd].setTimeStart(0);
+		server->users[fd].timeouts[channel].first = 0;
 	}
 }
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	server *server = &serverT;
 	std::vector<pollfd> fds;
 
-	std::cout << GREEN << "Server booting up" << NC << std::endl;
+	std::cout << GREEN << "Server started" << NC << std::endl;
 	pollfd serverPfd;
 	serverPfd.fd = server->socket_id;
 	serverPfd.events = POLLIN;

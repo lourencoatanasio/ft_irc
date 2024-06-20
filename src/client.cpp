@@ -179,15 +179,19 @@ void    user::kick(server *server, char *buf, int fd) {
 		nameOp = this->nickname;
 	if (server->channels.find(channel) != server->channels.end()) {
 		for (std::size_t i = 0; i < server->channels[channel]->users.size(); i++) {
-			std::string u = server->channels[channel]->users[i].getUsername();
+			//std::string u = server->channels[channel]->users[i].getUsername();
 			std::string n = server->channels[channel]->users[i].getNickname();
-			std::string message =
-					":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
-					nameOp + "\r\n";
-			for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
-				send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
-			server->channels[channel]->users.erase(i);
-			break;
+			if (n == flag)
+			{
+				std::string message =
+						":" + this->nickname + "!" + this->username + " KICK " + channel + " " + flag + " :" +
+						nameOp + "\r\n";
+				for (std::size_t j = 0; j < server->channels[channel]->users.size(); j++)
+					send_user(server->channels[channel]->users[j].getSocket(), message.c_str(), message.size(), 0);
+				server->users[i].timeouts.erase(channel);
+				server->channels[channel]->users.erase(i);
+				break;
+			}
 		}
 	}
 }
@@ -400,6 +404,7 @@ void	user::part(server *server, const char *buf)
 								send_all(server, message.c_str(), message.size(), 0, channelName);
 								message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 								send_all(server, message.c_str(), message.size(), 0, channelName);
+								server->users[it->second.getSocket()].timeouts.erase(channelName);
 								server->channels[channelName]->users.erase(it);
 								return ;
 							}
@@ -408,6 +413,7 @@ void	user::part(server *server, const char *buf)
 						{
 							message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 							send_all(server, message.c_str(), message.size(), 0, channelName);
+							server->users[it->second.getSocket()].timeouts.erase(channelName);
 							server->channels[channelName]->users.erase(it);
 							delete server->channels[channelName];
 							server->channels.erase(channelName);
@@ -418,6 +424,7 @@ void	user::part(server *server, const char *buf)
 					{
 						message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 						send_all(server, message.c_str(), message.size(), 0, channelName);
+						server->users[it->second.getSocket()].timeouts.erase(channelName);
 						server->channels[channelName]->users.erase(it);
 						return ;
 					}
@@ -426,6 +433,7 @@ void	user::part(server *server, const char *buf)
 				{
 					message = ":" + this->nickname + "!" + this->username + " PART " + channelName + " " + reason + "\r\n";
 					send_all(server, message.c_str(), message.size(), 0, channelName);
+					server->users[it->second.getSocket()].timeouts.erase(channelName);
 					server->channels[channelName]->users.erase(it);
 					return ;
 				}

@@ -59,17 +59,6 @@ void	check_still_building(int fd, server *server)
 		server->users[fd].setStillBuilding(1);
 }
 
-void show_users_in_channel(server *server, std::string channel)
-{
-    std::cout << "Users in channel " << channel << std::endl;
-    int i = 0;
-    for (std::map<int, user>::iterator it = server->channels[channel]->users.begin(); it != server->channels[channel]->users.end(); it++)
-    {
-        std::cout << it->second.getNickname() << " i = " << i << std::endl;
-        i++;
-    }
-}
-
 void	check_channel(char *buf, int fd, server *server)
 {
 	std::string buffer(buf), message, cmd, pass, buf2;
@@ -97,6 +86,7 @@ void	check_channel(char *buf, int fd, server *server)
 			server->channels[channelName]->setOps(1);
 			server->channels[channelName]->users[fd] = server->users[fd];
 			server->channels[channelName]->users[fd].setOpStatus(true);
+			server->users[fd].timeouts[channelName] = std::make_pair(0, 0);
 			message = ":" + nick + "!" + username + " JOIN " + channelName + "\r\n";
 		}
 		else if (server->channels[channelName]->getMaxUsers() <= channel_size(server, channelName) && server->channels[channelName]->getMaxUsers() > 0)
@@ -118,7 +108,10 @@ void	check_channel(char *buf, int fd, server *server)
 			return ;
 		}
 		else
+		{
 			server->channels[channelName]->users[fd] = server->users[fd];
+			server->users[fd].timeouts[channelName] = std::make_pair(0, 0);
+		}
 		std::vector<std::string>::iterator it = std::find(server->users[fd].invited.begin(), server->users[fd].invited.end(), channelName);
 		if (it != server->users[fd].invited.end())
 			server->users[fd].invited.erase(it);
@@ -145,15 +138,14 @@ void check_priv(char *buf, int fd, server *server)
 		std::size_t channelEndPos = buffer.find(" ", buffer.find("PRIVMSG") + 8);
 		std::string channel = buffer.substr(buffer.find("PRIVMSG") + 8, channelEndPos - (buffer.find("PRIVMSG") + 8));
 
-		if (!channel.empty() && channel.at(0) == '#') {
+		if (!channel.empty() && channel.at(0) == '#')
+		{
 			if (server->channels.find(channel) == server->channels.end())
 			{
 				std::string message = ": 403 " + nick + " " + channel + " :No such channel\r\n";
 				send_user(fd, message.c_str(), message.size(), 0);
 				return;
 			}
-            show_users_in_channel(server, channel);
-            std::cout << RED << "FD: " << fd << NC << std::endl;
 			if (server->channels[channel]->users.find(fd)->second.getNickname().empty() || server->channels[channel]->users.find(fd) == server->channels[channel]->users.end())
 			{
 				std::string message = ": 404 " + nick + " " + channel + " :Cannot send to channel\r\n";
@@ -161,7 +153,8 @@ void check_priv(char *buf, int fd, server *server)
 				return ;
 			}
 			std::size_t messageStartPos = buffer.find(":", channelEndPos);
-			if (messageStartPos != std::string::npos) {
+			if (messageStartPos != std::string::npos)
+			{
 				std::string receivedMessage = buffer.substr(messageStartPos + 1);
 				receivedMessage.erase(0, receivedMessage.find_first_not_of(' '));
 				receivedMessage.erase(receivedMessage.find_last_not_of(' ') + 1);

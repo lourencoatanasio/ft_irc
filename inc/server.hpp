@@ -26,7 +26,8 @@ class server
 		void		run(user *user, std::vector<pollfd> &fds, int fd, int i);
 	void    	disconnect(std::vector<pollfd> &fds, int fd, int i);
 	void		shutDown(std::vector<pollfd> &fds);
-    private:
+	void		priv_n_op(user *sUser, int fd);
+private:
         sockaddr_in IP;
         char buffer[BUFFER_SIZE];
         int bytesRead;
